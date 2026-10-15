@@ -1,0 +1,65 @@
+# XcodeGen spec. On the Mac:  brew install xcodegen && xcodegen generate && open SteadyTap.xcodeproj
+# The .xcodeproj is generated — don't commit it; edit this file instead.
+
+name: SteadyTap
+options:
+  deploymentTarget:
+    iOS: "16.0"
+  createIntermediateGroups: true
+
+settings:
+  base:
+    # ── Edit these three lines before building on a device ──────────────────────
+    APP_DISPLAY_NAME: SteadyTap               # temporary product name (app + keyboard)
+    BUNDLE_ID_BASE: org.example.steadytap     # must be unique, e.g. com.<yourname>.steadytap
+    DEVELOPMENT_TEAM: ""                      # your Team ID (Xcode ▸ Settings ▸ Accounts)
+    # ────────────────────────────────────────────────────────────────────────────
+    CODE_SIGN_STYLE: Automatic
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    SWIFT_VERSION: "5.0"
+    TARGETED_DEVICE_FAMILY: "1"               # iPhone only
+
+packages:
+  TouchEngine:
+    path: Packages/TouchEngine
+
+targets:
+  SteadyTap:
+    type: application
+    platform: iOS
+    sources: [App]
+    dependencies:
+      - target: SteadyTapKeyboard             # embedded as an app extension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(BUNDLE_ID_BASE)
+    info:
+      path: App/Info.plist
+      properties:
+        CFBundleDisplayName: $(APP_DISPLAY_NAME)
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+
+  SteadyTapKeyboard:
+    type: app-extension
+    platform: iOS
+    sources: [Keyboard]
+    dependencies:
+      - package: TouchEngine
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(BUNDLE_ID_BASE).keyboard
+        APPLICATION_EXTENSION_API_ONLY: YES
+    info:
+      path: Keyboard/Info.plist
+      properties:
+        CFBundleDisplayName: $(APP_DISPLAY_NAME)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.keyboard-service
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).KeyboardViewController
+          NSExtensionAttributes:
+            IsASCIICapable: false
+            PrefersRightToLeft: false
+            PrimaryLanguage: en-US
+            RequestsOpenAccess: false         # no Full Access: no network, no shared container
