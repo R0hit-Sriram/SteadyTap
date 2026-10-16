@@ -11,3 +11,8 @@ DerivedData/
 *.xcworkspace
 
 .DS_Store
+
+# Local AI tool state
+.claude-flow/
+.swarm/
+ruvector.db
