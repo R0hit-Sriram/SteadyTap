@@ -1,6 +1,8 @@
 import SwiftUI
 import TouchEngine
 
+typealias Gesture = TouchEngine.Gesture   // SwiftUI also has a Gesture type
+
 /// Sends text to whatever app the keyboard is typing into.
 final class ProxyTarget: TextTarget {
     weak var viewController: UIInputViewController?

@@ -11,8 +11,8 @@ settings:
   base:
     # ── Edit these three lines before building on a device ──────────────────────
     APP_DISPLAY_NAME: SteadyTap               # temporary product name (app + keyboard)
-    BUNDLE_ID_BASE: org.example.steadytap     # must be unique, e.g. com.<yourname>.steadytap
-    DEVELOPMENT_TEAM: ""                      # your Team ID (Xcode ▸ Settings ▸ Accounts)
+    BUNDLE_ID_BASE: com.prajinks.steadytap    # must be unique, e.g. com.<yourname>.steadytap
+    DEVELOPMENT_TEAM: GX7649X88Y              # your Team ID (Xcode ▸ Settings ▸ Accounts)
     # ────────────────────────────────────────────────────────────────────────────
     CODE_SIGN_STYLE: Automatic
     MARKETING_VERSION: "0.1.0"
