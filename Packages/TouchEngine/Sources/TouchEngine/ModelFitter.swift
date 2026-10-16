@@ -27,13 +27,13 @@ public struct ResidualStats: Codable, Equatable, Sendable {
 
     public init() {}
 
-    public mutating func add(_ r: Vec2) {
-        n += 1
-        sx += r.x
-        sy += r.y
-        sxx += r.x * r.x
-        sxy += r.x * r.y
-        syy += r.y * r.y
+    public mutating func add(_ r: Vec2, weight w: Double = 1) {
+        n += w
+        sx += w * r.x
+        sy += w * r.y
+        sxx += w * r.x * r.x
+        sxy += w * r.x * r.y
+        syy += w * r.y * r.y
     }
 
     public static func + (a: ResidualStats, b: ResidualStats) -> ResidualStats {
@@ -115,9 +115,9 @@ public enum ModelFitter {
         return model
     }
 
-    /// Same point type and evaluation as before, but including offsets confirmed while typing.
-    public static func refit(_ previous: TouchModel, samples: [CalibrationSample], evidence: [String: KeyEvidence]) -> TouchModel {
-        var model = fitParameters(samples, kind: previous.pointKind, keyWidth: previous.keyWidth, evidence: evidence)
+    /// Keep a model's point type, evaluation and repeat filter, but replace its learned parameters.
+    public static func refit(_ previous: TouchModel, means: [String: KeyEvidence], spreads: [String: KeyEvidence]) -> TouchModel {
+        var model = fit(means: means, spreads: spreads, kind: previous.pointKind, keyWidth: previous.keyWidth)
         model.heldOutAccuracy = previous.heldOutAccuracy
         model.fixedAccuracy = previous.fixedAccuracy
         model.evaluation = previous.evaluation
@@ -125,21 +125,36 @@ public enum ModelFitter {
         return model
     }
 
-    public static func fitParameters(
-        _ samples: [CalibrationSample], kind: PointKind, keyWidth kw: Double,
-        depth: ModelDepth = .perKey, kappa k: Double = kappa, evidence: [String: KeyEvidence] = [:]
-    ) -> TouchModel {
-        var model = TouchModel.untrained(keyWidth: kw, pointKind: kind)
-
-        var perKey = evidence
+    /// Per-key offset totals from calibration samples (slips beyond 3 key widths dropped).
+    public static func evidence(from samples: [CalibrationSample], kind: PointKind, keyWidth kw: Double) -> [String: KeyEvidence] {
+        var perKey: [String: KeyEvidence] = [:]
         for s in samples {
             let r = s.gesture.point(kind) - s.keyCenter
             guard r.length <= outlierFraction * kw else { continue }
             perKey[s.keyID, default: KeyEvidence(region: s.region)].stats.add(r)
         }
-        let all = perKey.values.reduce(ResidualStats()) { $0 + $1.stats }
-        guard all.n > 0 else { return model }
-        model.sampleCount = Int(all.n.rounded())
+        return perKey
+    }
+
+    public static func fitParameters(
+        _ samples: [CalibrationSample], kind: PointKind, keyWidth kw: Double,
+        depth: ModelDepth = .perKey, kappa k: Double = kappa
+    ) -> TouchModel {
+        let perKey = evidence(from: samples, kind: kind, keyWidth: kw)
+        return fit(means: perKey, spreads: perKey, kind: kind, keyWidth: kw, depth: depth, kappa: k)
+    }
+
+    /// The core fit. `means` decides where each key's touches are centered; `spreads` decides how
+    /// widely they scatter. They're separate so that unverified evidence can move the averages
+    /// without making the model overconfident about the spread.
+    public static func fit(
+        means: [String: KeyEvidence], spreads: [String: KeyEvidence], kind: PointKind, keyWidth kw: Double,
+        depth: ModelDepth = .perKey, kappa k: Double = kappa
+    ) -> TouchModel {
+        var model = TouchModel.untrained(keyWidth: kw, pointKind: kind)
+        let allMean = means.values.reduce(ResidualStats()) { $0 + $1.stats }
+        guard allMean.n > 0 else { return model }
+        model.sampleCount = Int(allMean.n.rounded())
 
         let defaultCov = Cov2.isotropic(defaultSigmaFraction * kw)
         let minSigma = minSigmaFraction * kw
@@ -150,26 +165,30 @@ public enum ModelFitter {
             guard st.n + k > 0 else { return prior }
             return ((st.scatter(about: mean) + prior * k) * (1 / (st.n + k))).floored(minSigma: minSigma)
         }
+        func byRegion(_ e: [String: KeyEvidence]) -> [Int: ResidualStats] {
+            var out: [Int: ResidualStats] = [:]
+            for v in e.values { out[v.region] = (out[v.region] ?? ResidualStats()) + v.stats }
+            return out
+        }
 
         // Everywhere (the global mean itself is not shrunk; its spread is shrunk toward a default)
-        let gMean = all.sum / all.n
-        let gCov = shrunkCov(all, mean: gMean, toward: defaultCov)
+        let gMean = allMean.sum / allMean.n
+        let gCov = shrunkCov(spreads.values.reduce(ResidualStats()) { $0 + $1.stats }, mean: gMean, toward: defaultCov)
         model.globalOffset = gMean
         model.globalCov = gCov
         if depth == .global { return model }
 
         // Per region, shrunk toward everywhere
-        var regionStats: [Int: ResidualStats] = [:]
-        for e in perKey.values { regionStats[e.region, default: ResidualStats()] = regionStats[e.region, default: ResidualStats()] + e.stats }
-        for (region, st) in regionStats {
+        let regionSpreads = byRegion(spreads)
+        for (region, st) in byRegion(means) {
             let mean = shrunkMean(st, toward: gMean)
             model.regionOffsets[region] = mean
-            model.regionCovs[region] = shrunkCov(st, mean: mean, toward: gCov)
+            model.regionCovs[region] = shrunkCov(regionSpreads[region] ?? ResidualStats(), mean: mean, toward: gCov)
         }
         if depth == .region { return model }
 
         // Per key, shrunk toward its region
-        for (keyID, e) in perKey {
+        for (keyID, e) in means {
             model.keyOffsets[keyID] = shrunkMean(e.stats, toward: model.regionOffsets[e.region] ?? gMean)
         }
         return model

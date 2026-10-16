@@ -64,7 +64,24 @@ Full steps and the device checklist are in [docs/MAC_AND_IPHONE.md](docs/MAC_AND
    - for contrast: per key with no borrowing, and the same model on the lift-off point
 
    Every number is leave-one-out accuracy on that person's own calibration taps. Layers don't always help: for a very regular person "no borrowing" can score slightly higher. The table shows that honestly rather than hiding it.
-10. **Optional learning from confirmed choices** (off by default). When the person *taps* one of the two offered letters, that touch is labeled by the person. We add its offset to a running per-key total, then refit. Each key's total is capped at a weight of 30, so newer touches count more and the model can follow gradual change. Typing on without tapping the bar is *not* counted. Only per-key sums are stored: no letters in order, no text, no times.
+10. **Keeps adapting while you type (online learning, `OnlineLearner.swift`, on by default, can be switched off).** Everyday typing doesn't tell us the intended key, so the keyboard keeps the last 3 typed letters in memory only and waits to see what happens to them. Each becomes one of three labeled examples, trusted differently:
+
+    | Label | When | Weight | Updates |
+    |---|---|---|---|
+    | **picked** | the person tapped a letter in the two-choice bar | 1.0 | average + spread |
+    | **corrected** | the letter was deleted and a nearby key retyped, and the model had given that key ≥ 2% for the original touch (so changing "cat" → "car" teaches nothing) | 1.0 | average + spread |
+    | **confident** | the model was ≥ 90% sure and the letter survived 3 more letters | 0.3 | average only |
+
+    Unverified "confident" labels never shrink the spread, because they're biased toward easy taps and would make the model overconfident.
+    - Each update fades all earlier evidence by 0.5% (calibration included), so evidence halves after about 140 learned touches and the model follows the person's current style.
+    - **Change detection:** we track the share of letters needing a fix over the last ~10 letters and the last ~100. When the recent rate is 15 points above the usual rate (after 30 letters), fading speeds up to 3% per update for 60 updates.
+    - ⚙︎ shows what it learned and offers "Go back to just my calibration".
+    - **Simulation results** (synthetic typist, first-try accuracy per 100 letters, static → adaptive):
+      - touch shifted 22pt after calibration: 41–50% → 78% in the first 100 letters, then 100%
+      - shift appears after 300 letters: 66–74% → 95%, then 100%
+      - no change: 100% → 100%, so adapting doesn't hurt a stable typist
+
+      These are simulations, not people.
 
 **Demo view.** Turn on ⚙︎ → *Show my touches*. Each tap is drawn with:
 - its path, a ring where the finger first touched and a dot where it lifted (orange if a fixed keyboard would have typed something else)
@@ -79,7 +96,7 @@ The toolbar shows the top-three probabilities and two lines: what a fixed keyboa
 - **Stored**, in the keyboard extension's own container as JSON:
   - calibration taps (requested key + touch path)
   - the learned parameters
-  - if the person turns on learning: per-key offset totals from letters they explicitly picked
+  - if "Keep adapting" is on: running per-key offset totals with older evidence faded, fix-rate averages and label counts. No text, no letter order, no times; the last 3 typed letters are held in memory only and never written.
   - settings
   - comparison **scores** if the person opts in
 - **Never stored:** typed text or keystroke history. The engine has no type that holds typed text, and a unit test types a word and checks it is absent from every saved file.
@@ -91,14 +108,14 @@ The toolbar shows the top-three probabilities and two lines: what a fixed keyboa
 
 | | Status |
 |---|---|
-| Touch engine + 39 unit tests (calibration, scoring, sparse data, ambiguity, repeated letters, undo/choice, per-layer evaluation, confirmed-choice learning and forgetting, comparison statistics, storage, delete, no typed text on disk) | **Implemented and passing** (`swift test`, Swift 5.10) |
+| Touch engine + 46 unit tests (calibration, scoring, sparse data, ambiguity, repeated letters, undo/choice, per-layer evaluation, online learning under drift and no drift, labeling rules, change detection, comparison statistics, storage, delete, no typed text on disk) | **Implemented and passing** (`swift test`, Swift 5.10) |
 | Keyboard extension and containing app | **Written and syntax-checked only.** Not yet compiled in Xcode or run on an iPhone. |
 | Device behavior (enabling, typing in other apps, switching, persistence, secure fields) | **Not yet verified.** See the checklist. |
 | Testing with people who have motor difficulties | **Not done.** Do not claim results until it is. |
 
 ## Known limitations
 
-- It learns only from calibration. If someone's movement varies through the day, they need to recalibrate.
+- Online learning needs a few dozen letters to catch up with a big change; recalibrating is faster. Its labels are inferred from behavior (picks, corrections, kept letters), so unusual editing habits could teach it the wrong thing. "Go back to just my calibration" undoes this.
 - The cursor can't be moved from our keyboard. Use the host app's text selection.
 - There is no word prediction, autocorrect, dictation or emoji.
 - The keys are drawn on screen and are **not exposed to VoiceOver** individually.

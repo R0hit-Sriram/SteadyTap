@@ -69,9 +69,28 @@ public final class TypingSession {
         didSet { if autoCapitalize { refreshAutoShift() } else if shift == .once { shift = .off } }
     }
 
-    /// Called when the person explicitly tells us which key a touch meant (by tapping a letter in
-    /// the choice bar). Used only for opt-in learning.
-    public var onConfirmedIntent: ((_ keyID: String, _ point: Vec2) -> Void)?
+    /// Reports touches whose intended key became known while typing (see LabelKind), for online learning.
+    /// Only fires when an adapted model is in use.
+    public var onLabeledTouch: ((LabeledTouch) -> Void)?
+
+    /// Letters typed recently whose outcome isn't known yet. MEMORY ONLY, at most `recentLimit`.
+    private struct RecentTouch {
+        var keyID: String
+        var output: String
+        let point: Vec2
+        let probabilities: [String: Double]
+        let topProbability: Double
+        let time: Double
+        var labeled = false
+    }
+    private var recent: [RecentTouch] = []
+    private var deletedTouch: RecentTouch?
+    public static let recentLimit = 3
+    public static let confidentThreshold = 0.9
+    public static let correctionWindow = 5.0
+    /// A retyped key only counts as a correction if the model had given it at least this probability
+    /// for the deleted touch. Stops "cat → car" (a changed word, not a misread) from teaching anything.
+    public static let plausibleAlternative = 0.02
 
     public var shift: ShiftState = .off
     public var page: KeyboardPage = .letters
@@ -120,6 +139,9 @@ public final class TypingSession {
             target?.insert(text)
             undo = .inserted(text)
             if decision.adaptationChangedIt { stats.adaptationChanges += 1 }
+            if model != nil, !decision.candidates.isEmpty {
+                noteTyped(keyID: key.id, output: text, decision: decision, time: gesture.up.t)
+            }
             if decision.hintChangedIt { stats.hintChanges += 1 }
             if let alt = decision.alternativeKeyID, let altKey = layout.key(id: alt), let altOut = altKey.output {
                 pendingChoice = PendingChoice(inserted: text, alternative: cased(altOut), insertedKeyID: key.id,
@@ -163,7 +185,8 @@ public final class TypingSession {
         target.insert(choice.alternative)
         undo = .replaced(old: choice.inserted, new: choice.alternative)
         stats.choicesChanged += 1
-        onConfirmedIntent?(choice.alternativeKeyID, choice.point)
+        labelLast(LabeledTouch(kind: .picked, keyID: choice.alternativeKeyID, point: choice.point, misread: true),
+                  newOutput: choice.alternative)
         if recordsDemoLine, !demoAdapted.isEmpty {
             demoAdapted.removeLast()
             demoAdapted += choice.alternative
@@ -175,8 +198,56 @@ public final class TypingSession {
     public func acceptChoice() {
         guard let choice = pendingChoice else { return }
         pendingChoice = nil
-        onConfirmedIntent?(choice.insertedKeyID, choice.point)
+        labelLast(LabeledTouch(kind: .picked, keyID: choice.insertedKeyID, point: choice.point, misread: false),
+                  newOutput: choice.inserted)
     }
+
+    // MARK: Turning normal typing into labeled touches
+
+    private func noteTyped(keyID: String, output: String, decision: Decision, time: Double) {
+        // A letter typed right after deleting one: was the deleted touch misread as a nearby key?
+        if let deleted = deletedTouch {
+            deletedTouch = nil
+            if time - deleted.time < Self.correctionWindow, keyID != deleted.keyID,
+               (deleted.probabilities[keyID] ?? 0) >= Self.plausibleAlternative {
+                emit(LabeledTouch(kind: .corrected, keyID: keyID, point: deleted.point, misread: true))
+            } else {
+                settleDeleted(deleted)
+            }
+        }
+        let probs = Dictionary(decision.candidates.prefix(5).map { ($0.keyID, $0.probability) }, uniquingKeysWith: max)
+        recent.append(RecentTouch(keyID: keyID, output: output, point: decision.point, probabilities: probs,
+                                  topProbability: decision.candidates[0].probability, time: time))
+        if recent.count > Self.recentLimit { settle(recent.removeFirst()) }
+    }
+
+    /// A letter that was typed and then left alone long enough: the person kept it.
+    private func settle(_ t: RecentTouch) {
+        guard !t.labeled else { return }
+        let kind: LabelKind = t.topProbability >= Self.confidentThreshold ? .confident : .kept
+        emit(LabeledTouch(kind: kind, keyID: t.keyID, point: t.point, misread: false))
+    }
+
+    /// Deleted with no matching retype: it needed fixing, but we don't know the intended key.
+    private func settleDeleted(_ t: RecentTouch) {
+        guard !t.labeled else { return }
+        emit(LabeledTouch(kind: .kept, keyID: t.keyID, point: t.point, misread: true))
+    }
+
+    private func labelLast(_ label: LabeledTouch, newOutput: String) {
+        guard model != nil, !recent.isEmpty else { return }
+        recent[recent.count - 1].labeled = true
+        recent[recent.count - 1].keyID = label.keyID
+        recent[recent.count - 1].output = newOutput
+        emit(label)
+    }
+
+    private func forgetRecent() {
+        recent = []
+        deletedTouch = nil
+    }
+
+    private func emit(_ label: LabeledTouch) { onLabeledTouch?(label) }
 
     /// Backspace held down: called repeatedly by the keyboard UI.
     public func repeatBackspace() {
@@ -187,7 +258,16 @@ public final class TypingSession {
     }
 
     private func deleteOne() {
-        if let last = target?.textBeforeCursor?.last { undo = .deleted(String(last)) }
+        let lastChar = target?.textBeforeCursor?.last
+        // Track which recent touch is being deleted, but only if the text still matches what we typed
+        // (if the cursor moved, we no longer know which touch this letter came from).
+        if let touch = recent.last, let lastChar, String(lastChar) == touch.output {
+            if let previous = deletedTouch { settleDeleted(previous) }
+            deletedTouch = recent.removeLast()
+        } else {
+            forgetRecent()
+        }
+        if let last = lastChar { undo = .deleted(String(last)) }
         target?.deleteBackward()
         stats.backspaces += 1
         if recordsDemoLine {
@@ -212,6 +292,7 @@ public final class TypingSession {
         undo = nil
         pendingChoice = nil
         pendingExtra = nil
+        forgetRecent() // undo rewrites text in ways we can't attribute to touches
         let before = target.textBeforeCursor ?? ""
         switch action {
         case .inserted(let t):

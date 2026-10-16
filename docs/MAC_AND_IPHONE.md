@@ -78,7 +78,12 @@ Write down the iPhone model, iOS version, date and pass/fail for each item. Don'
 - [ ] A tap halfway between two letters shows two buttons. Tapping the other letter replaces it in the text field. Undo restores the original.
 - [ ] Typing "hello", "letter", "coffee" keeps the double letters.
 - [ ] Holding backspace deletes repeatedly after about half a second. Sliding off it before then just deletes once. The toggle in ⚙︎ turns this off.
-- [ ] With ⚙︎ ▸ "Keep learning from letters I pick" on, tapping a letter in the choice bar raises the "plus N of your choices" count in ⚙︎. With it off, the count doesn't change. Typing on without tapping the bar never changes the count.
+- [ ] **Keep adapting** (on by default):
+  - After typing a few sentences, ⚙︎ shows "Learned while typing: N picks, N corrections, N sure taps".
+  - Type with a deliberately different touch (for example, always tap a little to the right). Within a few dozen letters, more first taps should come out right. The bar may say "Your taps changed — adapting faster".
+  - "Go back to just my calibration" resets the counts.
+  - With the toggle off, the counts don't change.
+  - Counts survive force-quitting the host app (saved every 10 letters and when the keyboard closes).
 
 **Settings**
 - [ ] Adaptation off: the touches overlay says "fixed keyboard".

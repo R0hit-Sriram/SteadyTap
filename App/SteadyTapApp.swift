@@ -108,7 +108,7 @@ struct ComparisonInfoView: View {
             Label("Standard keys", systemImage: "keyboard")
             Label("Larger keys", systemImage: "rectangle.expand.vertical")
             Label("Adapted to you", systemImage: "hand.point.up.left")
-            Text("To start it, calibrate first, then open the keyboard’s ⚙︎ menu and choose **Typing comparison**. You type 6 short phrases; the order of the three modes changes each time. Results show time, accuracy, corrections and choices.")
+            Text("To start it, calibrate first, then open the keyboard’s ⚙︎ menu and choose **Typing comparison**. You type 9 short phrases; the order of the three modes changes each time. Results show time, accuracy, corrections and choices.")
             Text("It’s your own test on your own phone — not a medical or clinical result. Scores are kept only if you choose to keep them, and you can type a summary into any text field to share it yourself.")
                 .foregroundStyle(.secondary)
         }
@@ -131,7 +131,10 @@ struct HowItWorksView: View {
                 Text("If two keys are close in score, the keyboard types the more likely one and shows both, so you can switch with one tap. Undo reverses the last action.")
             }
             Section("Limitations") {
-                Text("It learns from your calibration only, not from what you type. If your movements change during the day, recalibrate. It hasn’t been tested in a clinical study, and it may not help everyone.")
+                Text("Calibration gives it a starting point. After that, it keeps adapting as you type: from letters you pick when it offers two, letters you delete and retype nearby, and letters it was sure about that you kept. Older evidence fades, and if you suddenly need more fixes than usual, it learns faster. It keeps only running totals per key, never your text.")
+            }
+            Section("Limitations") {
+                Text("Big changes can still take a few dozen letters to catch up with; recalibrating is faster. It hasn’t been tested in a clinical study, and it may not help everyone.")
             }
         }
         .navigationTitle("How it works")
@@ -142,7 +145,7 @@ struct PrivacyView: View {
     var body: some View {
         List {
             Section("Stored on this iPhone, inside the keyboard") {
-                Text("• Your calibration taps (the key we asked for and where you touched)\n• The touch pattern learned from them\n• Keyboard settings\n• Comparison scores, only if you choose to keep them")
+                Text("• Your calibration taps (the key we asked for and where you touched)\n• The touch pattern learned from them, kept up to date as you type (running totals per key only)\n• Keyboard settings\n• Comparison scores, only if you choose to keep them")
             }
             Section("Never stored or sent") {
                 Text("What you type, a history of your keystrokes, or anything about your health. The keyboard has no internet access and does not request “Allow Full Access”. There is no account and no analytics.")

@@ -119,7 +119,7 @@ final class KeyboardController: ObservableObject {
         settings = store.loadSettings()
         profile = store.loadProfile()
         applySettings()
-        session.onConfirmedIntent = { [weak self] keyID, point in self?.learnFromChoice(keyID: keyID, point: point) }
+        session.onLabeledTouch = { [weak self] label in self?.learn(from: label) }
     }
 
     // MARK: Layout
@@ -224,14 +224,28 @@ final class KeyboardController: ObservableObject {
         revision += 1
     }
 
-    /// Opt-in: the person explicitly picked a letter in the choice bar, so we know what that touch meant.
-    /// Only per-key offset totals are kept (see CalibrationProfile.addConfirmed).
-    private func learnFromChoice(keyID: String, point: Vec2) {
-        guard settings.learnFromChoices, settings.adaptationOn, screen == .typing,
-              var updated = profile, let key = layout.key(id: keyID) else { return }
-        updated.addConfirmed(keyID: keyID, region: key.region, offset: point - key.frame.center)
-        try? store.save(updated)
+    /// Online learning while typing (see OnlineLearner). Only per-key running totals are stored.
+    /// Not during calibration or the comparison test, so those stay fair.
+    private func learn(from label: LabeledTouch) {
+        guard settings.keepAdapting, settings.adaptationOn, screen == .typing, var updated = profile else { return }
+        let startedFast = updated.learn(label, layout: layout)
         profile = updated
+        applySettings()
+        // Save every 10 updates (and right away when a change is detected) instead of on every letter.
+        if startedFast || (updated.adaptive?.updates ?? 0) % 10 == 0 { persist() }
+    }
+
+    /// Write the profile to disk (also called when the keyboard closes).
+    func persist() {
+        if let profile { try? store.save(profile) }
+    }
+
+    /// Forget what was learned while typing; keep the calibration.
+    func resetAdaptation() {
+        guard var updated = profile else { return }
+        updated.resetAdaptation()
+        profile = updated
+        persist()
         applySettings()
     }
 

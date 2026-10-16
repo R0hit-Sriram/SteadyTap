@@ -38,6 +38,11 @@ final class KeyboardViewController: UIInputViewController {
         syncWithHost()
     }
 
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        controller.persist()
+    }
+
     override func textDidChange(_ textInput: UITextInput?) {
         super.textDidChange(textInput)
         syncWithHost()

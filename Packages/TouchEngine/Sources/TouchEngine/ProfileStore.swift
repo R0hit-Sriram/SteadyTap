@@ -22,8 +22,8 @@ public struct KeyboardSettings: Codable, Equatable, Sendable {
     public var askLevel = AskLevel.sometimes
     public var useLetterPatterns = true
     public var showTouches = false
-    /// Opt-in: keep improving from letters the person explicitly picks in the two-choice bar.
-    public var learnFromChoices = false
+    /// Keep updating the touch model from everyday typing (picks, corrections, confident taps).
+    public var keepAdapting = true
     public var holdToDelete = true
     public var comparisonRuns = 0
     public init() {}
@@ -37,7 +37,7 @@ public struct KeyboardSettings: Codable, Equatable, Sendable {
         askLevel = try c.decodeIfPresent(AskLevel.self, forKey: .askLevel) ?? d.askLevel
         useLetterPatterns = try c.decodeIfPresent(Bool.self, forKey: .useLetterPatterns) ?? d.useLetterPatterns
         showTouches = try c.decodeIfPresent(Bool.self, forKey: .showTouches) ?? d.showTouches
-        learnFromChoices = try c.decodeIfPresent(Bool.self, forKey: .learnFromChoices) ?? d.learnFromChoices
+        keepAdapting = try c.decodeIfPresent(Bool.self, forKey: .keepAdapting) ?? d.keepAdapting
         holdToDelete = try c.decodeIfPresent(Bool.self, forKey: .holdToDelete) ?? d.holdToDelete
         comparisonRuns = try c.decodeIfPresent(Int.self, forKey: .comparisonRuns) ?? d.comparisonRuns
     }
@@ -49,13 +49,8 @@ public struct CalibrationProfile: Codable, Equatable, Sendable {
     public var createdAt: Date
     public var samples: [CalibrationSample]
     public var model: TouchModel
-    /// Opt-in learning: per-key TOTALS of touch offsets for letters the person explicitly picked
-    /// in the two-choice bar. No letters in order, no text, no times — only sums per key.
-    public var confirmed: [String: KeyEvidence]?
-
-    /// Each key's confirmed evidence is capped at this weight, so recent touches matter more
-    /// and the model can follow gradual changes.
-    public static let confirmedCap = 30.0
+    /// What was learned while typing (per-key running totals only). nil = nothing yet.
+    public var adaptive: AdaptiveState?
 
     public init(createdAt: Date, samples: [CalibrationSample], model: TouchModel) {
         self.createdAt = createdAt
@@ -63,17 +58,22 @@ public struct CalibrationProfile: Codable, Equatable, Sendable {
         self.model = model
     }
 
-    public var confirmedCount: Int { Int((confirmed ?? [:]).values.reduce(0) { $0 + $1.stats.n }.rounded()) }
+    /// Learn from one labeled touch and update the model. Returns true if a change in the person's
+    /// touch was just detected (learning speeds up for a while).
+    @discardableResult
+    public mutating func learn(_ touch: LabeledTouch, layout: KeyboardLayout) -> Bool {
+        var state = adaptive ?? OnlineLearner.seed(samples: samples, model: model)
+        let startedFast = OnlineLearner.update(&state, with: touch, layout: layout)
+        adaptive = state
+        model = OnlineLearner.model(from: state, base: model)
+        return startedFast
+    }
 
-    /// Add one explicitly confirmed touch and refit the model.
-    public mutating func addConfirmed(keyID: String, region: Int, offset: Vec2) {
-        var all = confirmed ?? [:]
-        var e = all[keyID] ?? KeyEvidence(region: region)
-        if e.stats.n >= Self.confirmedCap { e.stats = e.stats.scaled((Self.confirmedCap - 1) / e.stats.n) }
-        e.stats.add(offset)
-        all[keyID] = e
-        confirmed = all
-        model = ModelFitter.refit(model, samples: samples, evidence: all)
+    /// Forget everything learned while typing and go back to the calibration model.
+    public mutating func resetAdaptation() {
+        adaptive = nil
+        let e = ModelFitter.evidence(from: samples, kind: model.pointKind, keyWidth: model.keyWidth)
+        model = ModelFitter.refit(model, means: e, spreads: e)
     }
 }
 

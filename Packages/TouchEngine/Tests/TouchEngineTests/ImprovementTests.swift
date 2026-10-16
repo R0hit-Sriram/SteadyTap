@@ -33,59 +33,6 @@ final class EvaluationTests: XCTestCase {
     }
 }
 
-final class ConfirmedLearningTests: XCTestCase {
-    func makeProfile() -> CalibrationProfile {
-        var user = SyntheticUser(sigma: 3)
-        let samples = user.calibrate(letters + letters, layout: layout390)
-        return CalibrationProfile(createdAt: Date(), samples: samples, model: ModelFitter.fit(samples, layout: layout390))
-    }
-
-    func testConfirmedChoicesShiftThatKeyAndKeepEvaluation() {
-        var profile = makeProfile()
-        let before = profile.model
-        let e = layout390.key(id: "e")!
-        for _ in 0 ..< 20 { profile.addConfirmed(keyID: "e", region: e.region, offset: Vec2(15, 0)) }
-        XCTAssertGreaterThan(profile.model.keyOffsets["e"]!.x, 5)
-        XCTAssertEqual(profile.model.evaluation, before.evaluation)
-        XCTAssertEqual(profile.model.pointKind, before.pointKind)
-        XCTAssertEqual(profile.confirmedCount, 20)
-    }
-
-    func testOldConfirmationsFadeSoRecentTouchesCountMore() {
-        var profile = makeProfile()
-        let e = layout390.key(id: "e")!
-        for _ in 0 ..< 100 { profile.addConfirmed(keyID: "e", region: e.region, offset: Vec2(15, 0)) }
-        XCTAssertLessThanOrEqual(profile.confirmed!["e"]!.stats.n, CalibrationProfile.confirmedCap + 1e-9)
-        for _ in 0 ..< 60 { profile.addConfirmed(keyID: "e", region: e.region, offset: Vec2(-15, 0)) }
-        XCTAssertLessThan(profile.model.keyOffsets["e"]!.x, 0, "recent behavior should win")
-    }
-
-    func testOnlyExplicitChoicesCountAsConfirmations() {
-        let buffer = BufferTarget()
-        let session = TypingSession(target: buffer)
-        session.autoCapitalize = false
-        session.model = TouchModel.untrained(keyWidth: layout390.keyWidth)
-        var confirmed: [String] = []
-        session.onConfirmedIntent = { key, _ in confirmed.append(key) }
-        let e = layout390.key(id: "e")!.frame.center, r = layout390.key(id: "r")!.frame.center
-        let mid = tapAt((e + r) / 2)
-
-        session.handle(mid, layout: layout390)
-        let typed = session.pendingChoice!
-        session.acceptChoice()
-        XCTAssertEqual(confirmed, [typed.insertedKeyID])
-
-        session.handle(mid, layout: layout390)
-        let alt = session.pendingChoice!.alternativeKeyID
-        session.chooseAlternative()
-        XCTAssertEqual(confirmed.last, alt)
-
-        session.handle(mid, layout: layout390)
-        session.handle(tapAt(layout390.key(id: "g")!.frame.center, t: 5), layout: layout390) // just typing on
-        XCTAssertEqual(confirmed.count, 2)
-    }
-}
-
 final class BackspaceAndHintTests: XCTestCase {
     func testHeldBackspaceDeletesRepeatedly() {
         let buffer = BufferTarget()

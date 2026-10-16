@@ -125,6 +125,9 @@ struct TypingBar: View {
                     DemoReadout(c: c)
                 } else if c.profile == nil && c.settings.adaptationOn {
                     Text("Not calibrated yet — tap ⚙︎ to start").font(.footnote).foregroundStyle(.secondary)
+                } else if c.settings.keepAdapting, c.profile?.adaptive?.isAdaptingFast == true {
+                    Label("Your taps changed — adapting faster", systemImage: "arrow.triangle.2.circlepath")
+                        .font(.footnote).foregroundStyle(.secondary)
                 } else {
                     Spacer()
                 }
@@ -242,7 +245,7 @@ struct MenuView: View {
                 .buttonStyle(.bordered)
             if let p = c.profile {
                 Text("Learned from \(p.samples.count) calibration taps on \(p.createdAt.formatted(date: .abbreviated, time: .omitted))"
-                     + (p.confirmedCount > 0 ? ", plus \(p.confirmedCount) of your choices." : "."))
+                     + ".")
                     .font(.footnote).foregroundStyle(.secondary)
                 if !p.model.evaluation.isEmpty {
                     NavigationLinkLike(title: "What each part of the model adds") { c.screen = .calibrationDone }
@@ -273,13 +276,19 @@ struct MenuView: View {
             Toggle("Use common letter pairs as a small hint", isOn: $c.settings.useLetterPatterns)
             Toggle("Show my touches (explains each decision)", isOn: $c.settings.showTouches)
             Toggle("Hold backspace to keep deleting", isOn: $c.settings.holdToDelete)
-            Toggle("Keep learning from letters I pick", isOn: $c.settings.learnFromChoices)
-            Text("When two letters are offered and you tap one, that tells us what that touch meant. If this is on, we add it to your touch pattern as a running total for that key — never the text or the order of letters. Newer choices count more than old ones.")
+            Toggle("Keep adapting as I type", isOn: $c.settings.keepAdapting)
+            Text("The keyboard keeps learning from letters you pick in the two-choice bar, letters you delete and retype nearby, and letters it was sure about that you kept. Older evidence slowly fades, so it follows how you type now. If you suddenly need to fix more letters than usual, it learns faster for a while. It stores only running totals per key — never your text or the order of letters.")
                 .font(.footnote).foregroundStyle(.secondary)
+            if let a = c.profile?.adaptive, a.updates > 0 {
+                Text("Learned while typing: \(a.count(.picked)) picks, \(a.count(.corrected)) corrections, \(a.count(.confident)) sure taps. Letters needing a fix lately: \(Int((a.recentFixRate * 100).rounded()))% (usual \(Int((a.usualFixRate * 100).rounded()))%).")
+                    .font(.footnote).foregroundStyle(.secondary)
+                Button("Go back to just my calibration") { c.resetAdaptation() }
+                    .buttonStyle(.bordered)
+            }
 
             Text("What this keyboard stores")
                 .font(.subheadline.bold())
-            Text("Only your calibration taps (the key we asked for and where your finger touched), the touch pattern learned from them, per-key totals from letters you picked (if you turned that on), these settings, and comparison scores if you choose to keep them. It never stores what you type, has no internet access, and does not need “Allow Full Access”. Password fields always use Apple’s keyboard.")
+            Text("Only your calibration taps (the key we asked for and where your finger touched), the touch pattern learned from them, running per-key totals learned while you type (if “Keep adapting” is on), these settings, and comparison scores if you choose to keep them. It never stores what you type, has no internet access, and does not need “Allow Full Access”. Password fields always use Apple’s keyboard.")
                 .font(.footnote)
 
             Button(role: .destructive) {
