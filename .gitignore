@@ -16,3 +16,4 @@ DerivedData/
 .claude-flow/
 .swarm/
 ruvector.db
+build/
