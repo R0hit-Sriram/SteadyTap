@@ -10,7 +10,49 @@ struct SteadyTapApp: App {
     }
 }
 
-enum Route: Hashable { case setup, practice, howItWorks, comparison, privacy }
+enum Route: Hashable {
+    case setup, practice, howItWorks, comparison, privacy
+
+    var title: String {
+        switch self {
+        case .setup: "Add the keyboard"
+        case .practice: "Practice pad"
+        case .howItWorks: "How it works"
+        case .comparison: "Compare keyboards"
+        case .privacy: "Privacy"
+        }
+    }
+
+    var symbol: String {
+        switch self {
+        case .setup: "keyboard"
+        case .practice: "hand.tap.fill"
+        case .howItWorks: "scope"
+        case .comparison: "chart.bar.xaxis"
+        case .privacy: "hand.raised.fill"
+        }
+    }
+
+    var hue: Hue {
+        switch self {
+        case .setup: .indigo
+        case .practice: .teal
+        case .howItWorks: .purple
+        case .comparison: .orange
+        case .privacy: .slate
+        }
+    }
+
+    var blurb: String {
+        switch self {
+        case .setup: "Turn \(appName) on in Settings. It never asks for Full Access."
+        case .practice: "Calibrate and try the keyboard. Nothing you type here is saved."
+        case .howItWorks: "How it decides which key you meant, and how it keeps learning."
+        case .comparison: "Test the adapted keyboard against a standard one, on yourself."
+        case .privacy: "What stays on this iPhone, and what is never stored."
+        }
+    }
+}
 
 // MARK: - Home
 
@@ -20,181 +62,225 @@ struct HomeView: View {
     @AppStorage("step.calibrated") private var calibrated = false
     @AppStorage("step.typed") private var typed = false
     @State private var path: [Route] = []
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         NavigationStack(path: $path) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 32) {
-                    Text(appName)
-                        .font(.brand)
-                        .foregroundStyle(Palette.ink)
-                        .accessibilityAddTraits(.isHeader)
-                        .padding(.bottom, -12)
-                    hero
-                    steps
-                    learnMore
-                    Label("No account and no internet access. What you type is never stored.", systemImage: "lock")
+                    HeroCard(action: next.title) { path.append(next.route) }
+                    setup
+                    explore
+                    Label("No account, no internet access. What you type is never stored.", systemImage: "lock.fill")
                         .font(.footnote)
-                        .foregroundStyle(Palette.inkSoft)
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity)
+                        .multilineTextAlignment(.center)
                 }
-                .padding(.horizontal, 20)
-                .padding(.bottom, 32)
+                .padding(.horizontal, 16)
+                .padding(.bottom, 24)
             }
-            .background(Palette.paper.ignoresSafeArea())
+            .background(Palette.background.ignoresSafeArea())
             .navigationTitle(appName)
-            .toolbar(.hidden, for: .navigationBar)
             .navigationDestination(for: Route.self) { route in
                 switch route {
                 case .setup: SetupView()
                 case .practice: PracticeView()
-                case .howItWorks: ArticleView(title: "How it works", sections: Copy.howItWorks)
-                case .comparison: ArticleView(title: "Compare keyboards", sections: Copy.comparison)
-                case .privacy: ArticleView(title: "Privacy", sections: Copy.privacy)
+                case .howItWorks: ArticleView(route: route, sections: Copy.howItWorks)
+                case .comparison: ArticleView(route: route, sections: Copy.comparison)
+                case .privacy: ArticleView(route: route, sections: Copy.privacy)
                 }
             }
         }
     }
 
-    private var hero: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            TouchMap()
-                .frame(maxWidth: 340)
-                .padding(24)
-                .frame(maxWidth: .infinity)
-                .card()
-            Text("A keyboard that learns how you touch.")
-                .font(.hero)
-                .foregroundStyle(Palette.ink)
-            Text("If you often hit the key next to the one you meant, \(appName) learns your own touch pattern from a short tapping exercise, then uses it to read your taps in Notes, Messages and most other apps.")
-                .foregroundStyle(Palette.inkSoft)
-        }
+    private var doneCount: Int { [added, calibrated, typed].filter { $0 }.count }
+
+    private var next: (title: String, route: Route) {
+        if !added { return ("Get started", .setup) }
+        if !calibrated { return ("Teach it your touch", .practice) }
+        return ("Open the practice pad", .practice)
     }
 
-    private var steps: some View {
+    private var setup: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .firstTextBaseline) {
-                Text("Build your keyboard").font(.heading).foregroundStyle(Palette.ink)
+                Text("Get set up").font(.title2.bold()).accessibilityAddTraits(.isHeader)
                 Spacer()
-                Text("\([added, calibrated, typed].filter { $0 }.count) of 3")
-                    .font(.subheadline.monospacedDigit())
-                    .foregroundStyle(Palette.inkSoft)
+                Text(doneCount == 3 ? "All done" : "\(doneCount) of 3")
+                    .font(.subheadline.weight(.medium).monospacedDigit())
+                    .foregroundStyle(.secondary)
             }
-            Text("Tap a number to tick off a step.")
-                .font(.footnote)
-                .foregroundStyle(Palette.inkSoft)
+            ProgressView(value: Double(doneCount), total: 3)
+                .tint(.green)
+                .accessibilityLabel("Setup progress")
+                .accessibilityValue("\(doneCount) of 3 steps done")
 
-            StepCard(number: 1, title: "Add it to your iPhone", done: $added,
-                     detail: Text("Turn on \(appName) in Settings. It never asks for Full Access.")) {
-                Button("Show me how") { path.append(.setup) }.buttonStyle(QuietButtonStyle())
+            VStack(spacing: 0) {
+                StepRow(title: "Add it to your iPhone", detail: Text("Turn it on in Settings."),
+                        symbol: "keyboard", hue: .indigo, done: $added) { path.append(.setup) }
+                Divider().padding(.leading, 66)
+                StepRow(title: "Teach it your touch", detail: Text("Tap 63 highlighted keys in three short sets."),
+                        symbol: "hand.tap.fill", hue: .teal, done: $calibrated) { path.append(.practice) }
+                Divider().padding(.leading, 66)
+                StepRow(title: "Type anywhere",
+                        detail: Text("Hold \(Image(systemName: "globe")) in any app and choose \(appName)."),
+                        symbol: "globe", hue: .blue, done: $typed, open: nil)
             }
-            StepCard(number: 2, title: "Teach it your touch", done: $calibrated,
-                     detail: Text("Tap 63 highlighted keys in three short sets. Take a break whenever you like.")) {
-                Button("Open the practice pad") { path.append(.practice) }.buttonStyle(QuietButtonStyle())
-            }
-            StepCard(number: 3, title: "Type anywhere", done: $typed,
-                     detail: Text("In any app, hold \(Image(systemName: "globe")) and choose \(appName). When a tap is close to two keys, both letters appear so one tap can switch.")) {
-                EmptyView()
-            }
+            .grouped()
+            .padding(.top, 4)
+
+            Text("Tap a circle to tick off a step.")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 4)
         }
     }
 
-    private var learnMore: some View {
+    private var explore: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Good to know").font(.heading).foregroundStyle(Palette.ink)
-            VStack(spacing: 0) {
-                LinkRow(title: "How it decides which key you meant", icon: "scope", route: .howItWorks)
-                Divider().overlay(Palette.line).padding(.leading, 56)
-                LinkRow(title: "Compare keyboards on yourself", icon: "chart.bar", route: .comparison)
-                Divider().overlay(Palette.line).padding(.leading, 56)
-                LinkRow(title: "Privacy and what is stored", icon: "lock", route: .privacy)
+            Text("Explore").font(.title2.bold()).accessibilityAddTraits(.isHeader)
+            // One column at accessibility text sizes so titles never truncate.
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12),
+                                     count: typeSize.isAccessibilitySize ? 1 : 2), spacing: 12) {
+                ForEach([Route.practice, .howItWorks, .comparison, .privacy], id: \.self) { route in
+                    NavigationLink(value: route) { Tile(route: route) }.buttonStyle(PressStyle())
+                }
             }
-            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-            .card()
         }
     }
 }
 
-struct StepCard<Action: View>: View {
-    let number: Int
-    let title: String
-    @Binding var done: Bool
-    let detail: Text
-    @ViewBuilder var action: Action
+/// Tips-style feature card: illustration, headline and one clear next action.
+struct HeroCard: View {
+    let action: String
+    let onTap: () -> Void
 
     var body: some View {
-        HStack(alignment: .top, spacing: 10) {
-            Button { done.toggle() } label: {
-                ZStack {
-                    Circle().fill(done ? Palette.done : .clear)
-                    Circle().strokeBorder(done ? Palette.done : Palette.line, lineWidth: 1.5)
-                    if done {
-                        Image(systemName: "checkmark").font(.footnote.weight(.bold)).foregroundStyle(Palette.card)
-                    } else {
-                        Text("\(number)").font(.subheadline.weight(.semibold)).foregroundStyle(Palette.ink)
-                    }
-                }
-                .frame(width: 32, height: 32)
-                .frame(width: 44, height: 44)
-                .contentShape(Rectangle())
+        VStack(alignment: .leading, spacing: 16) {
+            Text("ADAPTIVE KEYBOARD")
+                .font(.caption.weight(.semibold))
+                .tracking(0.6)
+                .foregroundStyle(.white.opacity(0.85))
+            TouchMap()
+                .frame(maxWidth: 320)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 4)
+            VStack(alignment: .leading, spacing: 8) {
+                Text("A keyboard that learns how you touch.")
+                    .font(.title2.bold())
+                    .foregroundStyle(.white)
+                    .fixedSize(horizontal: false, vertical: true)
+                Text("Tap a few keys and \(appName) learns where your touches land, then reads them that way in Notes, Messages and most other apps.")
+                    .font(.subheadline)
+                    .foregroundStyle(.white.opacity(0.9))
+                    .fixedSize(horizontal: false, vertical: true)
             }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Step \(number), \(title)")
-            .accessibilityValue(done ? "Done" : "Not done")
-            .accessibilityHint(done ? "Marks this step as not done" : "Marks this step as done")
-
-            VStack(alignment: .leading, spacing: 6) {
-                Text(title).font(.headline).foregroundStyle(Palette.ink)
-                detail.font(.subheadline).foregroundStyle(Palette.inkSoft).fixedSize(horizontal: false, vertical: true)
-                action.padding(.top, 6)
+            Button(action: onTap) {
+                Text(action)
+                    .font(.headline)
+                    .foregroundStyle(Color(rgb: 0x1A1F6B))
+                    .frame(maxWidth: .infinity, minHeight: 50)
+                    .background(.white, in: Capsule())
             }
-            .padding(.top, 10)
-            Spacer(minLength: 0)
+            .buttonStyle(PressStyle())
+            .padding(.top, 4)
         }
-        .padding(.leading, 8)
-        .padding([.trailing, .bottom], 16)
-        .padding(.top, 6)
-        .card()
-        .animation(.easeOut(duration: 0.2), value: done)
+        .padding(20)
+        .background {
+            ZStack {
+                Hue.hero.gradient
+                RadialGradient(colors: [.white.opacity(0.18), .clear], center: .topTrailing, startRadius: 0, endRadius: 320)
+            }
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 30, style: .continuous))
+        .shadow(color: Color(rgb: 0x1A1F6B).opacity(0.25), radius: 20, y: 10)
     }
 }
 
-struct LinkRow: View {
+/// Settings-style row: icon tile, title and detail open the step; the circle ticks it off.
+struct StepRow: View {
     let title: String
-    let icon: String
+    let detail: Text
+    let symbol: String
+    let hue: Hue
+    @Binding var done: Bool
+    let open: (() -> Void)?
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Button { if let open { open() } else { done.toggle() } } label: {
+                HStack(spacing: 14) {
+                    IconTile(symbol: symbol, hue: hue)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(title).font(.body.weight(.semibold)).foregroundStyle(.primary)
+                        detail.font(.subheadline).foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    Spacer(minLength: 0)
+                }
+                .padding(.vertical, 12)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(PressStyle())
+            .accessibilityHint(open == nil ? "Marks this step as done" : "Opens this step")
+
+            Button { done.toggle() } label: {
+                Image(systemName: done ? "checkmark.circle.fill" : "circle")
+                    .font(.title2)
+                    .foregroundStyle(done ? Color.green : Color.secondary)
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(title)
+            .accessibilityValue(done ? "Done" : "Not done")
+            .accessibilityHint(done ? "Marks this step as not done" : "Marks this step as done")
+        }
+        .padding(.leading, 16)
+        .padding(.trailing, 6)
+        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: done)
+        .successHaptic(done)
+    }
+}
+
+/// Shortcuts-style tile.
+struct Tile: View {
     let route: Route
 
     var body: some View {
-        NavigationLink(value: route) {
-            HStack(spacing: 14) {
-                Image(systemName: icon).foregroundStyle(Palette.accent).frame(width: 26).accessibilityHidden(true)
-                Text(title).foregroundStyle(Palette.ink).multilineTextAlignment(.leading)
-                Spacer()
-                Image(systemName: "chevron.right").font(.footnote.weight(.semibold)).foregroundStyle(Palette.inkSoft)
-                    .accessibilityHidden(true)
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-            .frame(minHeight: 56)
-            .contentShape(Rectangle())
+        VStack(alignment: .leading, spacing: 0) {
+            Image(systemName: route.symbol)
+                .font(.title2.weight(.semibold))
+                .accessibilityHidden(true)
+            Spacer(minLength: 28)
+            Text(route.title)
+                .font(.headline)
+                .multilineTextAlignment(.leading)
+                .fixedSize(horizontal: false, vertical: true)
         }
-        .buttonStyle(RowButtonStyle())
+        .foregroundStyle(.white)
+        .padding(16)
+        .frame(maxWidth: .infinity, minHeight: 116, alignment: .leading)
+        .background(route.hue.gradient, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
     }
 }
 
-// MARK: - Shared page shell
+// MARK: - Detail pages
 
-struct Page<Content: View>: View {
-    let title: String
-    @ViewBuilder var content: Content
+/// Icon, title and one-line summary at the top of each page, as in Settings and Feedback Assistant.
+struct PageHeader: View {
+    let route: Route
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) { content }
-                .padding(.horizontal, 20)
-                .padding(.bottom, 32)
+        VStack(spacing: 10) {
+            IconTile(symbol: route.symbol, hue: route.hue, size: 64)
+            Text(route.title).font(.title2.bold()).multilineTextAlignment(.center)
+            Text(route.blurb).font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.center)
         }
-        .background(Palette.paper.ignoresSafeArea())
-        .navigationTitle(title)
+        .frame(maxWidth: .infinity)
+        .listRowBackground(Color.clear)
+        .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 8, trailing: 16))
     }
 }
 
@@ -203,133 +289,123 @@ struct NumberedStep: View {
     let text: Text
 
     var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 12) {
-            Text("\(n)").font(.body.weight(.semibold).monospacedDigit()).foregroundStyle(Palette.accent)
-                .frame(minWidth: 16, alignment: .leading)
-            text.foregroundStyle(Palette.ink).fixedSize(horizontal: false, vertical: true)
+        Label {
+            text.fixedSize(horizontal: false, vertical: true)
+        } icon: {
+            Image(systemName: "\(n).circle.fill").foregroundStyle(Palette.accent).font(.title3)
         }
     }
 }
-
-struct Note: View {
-    let heading: String
-    let text: Text
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(heading).font(.headline).foregroundStyle(Palette.ink)
-            text.foregroundStyle(Palette.inkSoft).fixedSize(horizontal: false, vertical: true)
-        }
-        .padding(20)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .card()
-    }
-}
-
-// MARK: - Setup
 
 struct SetupView: View {
     var body: some View {
-        Page(title: "Add the keyboard") {
-            VStack(alignment: .leading, spacing: 16) {
-                NumberedStep(n: 1, text: Text("Open the **Settings** app."))
+        List {
+            Section { PageHeader(route: .setup) }
+            Section {
+                NumberedStep(n: 1, text: Text("Open **Settings**."))
                 NumberedStep(n: 2, text: Text("Go to **General → Keyboard → Keyboards**."))
                 NumberedStep(n: 3, text: Text("Tap **Add New Keyboard…** and choose **\(appName)**."))
                 NumberedStep(n: 4, text: Text("Leave **Allow Full Access** off. \(appName) doesn’t need it."))
+            } header: {
+                Text("In the Settings app")
+            } footer: {
+                Text("The button below opens \(appName)’s page in Settings. If you see **Keyboards** there, you can turn it on directly.")
             }
-            .padding(20)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .card()
-
-            Button("Open Settings") {
+            Section("Switching to it while typing") {
+                Text("In any text field, tap or hold \(Image(systemName: "globe")) and pick \(appName). Tap \(Image(systemName: "globe")) on \(appName) to switch back.")
+            }
+            Section("Where it can’t be used") {
+                Text("For your security, iPhone always switches to Apple’s keyboard in password fields and phone-number pads. Some apps, often banking apps, also block other keyboards.")
+            }
+        }
+        .listStyle(.insetGrouped)
+        .navigationTitle(Route.setup.title)
+        .navigationBarTitleDisplayMode(.inline)
+        .safeAreaInset(edge: .bottom) {
+            Button {
                 if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) }
+            } label: {
+                Text("Open Settings").font(.headline).frame(maxWidth: .infinity)
             }
-            .buttonStyle(PrimaryButtonStyle())
-            Text("This opens \(appName)’s page in Settings. If you see **Keyboards** there, you can turn it on directly.")
-                .font(.footnote)
-                .foregroundStyle(Palette.inkSoft)
-                .padding(.bottom, 8)
-
-            Note(heading: "Switching to it while typing",
-                 text: Text("In any text field, tap or hold \(Image(systemName: "globe")) and pick \(appName). Tap \(Image(systemName: "globe")) on \(appName) to switch back."))
-            Note(heading: "Where it can’t be used",
-                 text: Text("For your security, iPhone always switches to Apple’s keyboard in password fields and phone-number pads. Some apps, often banking apps, also block other keyboards."))
+            .prominentButton()
+            .padding(.horizontal, 20)
+            .padding(.bottom, 8)
         }
     }
 }
-
-// MARK: - Practice
 
 struct PracticeView: View {
     @State private var text = "" // memory only; cleared when you leave this screen
 
     var body: some View {
-        Page(title: "Practice pad") {
-            VStack(alignment: .leading, spacing: 14) {
-                Text("Calibrate here").font(.headline).foregroundStyle(Palette.ink)
+        List {
+            Section { PageHeader(route: .practice) }
+            Section("Calibrate") {
                 NumberedStep(n: 1, text: Text("Tap the box below."))
                 NumberedStep(n: 2, text: Text("Switch to \(appName) with \(Image(systemName: "globe"))."))
                 NumberedStep(n: 3, text: Text("Tap \(Image(systemName: "gearshape")) on the keyboard and choose **Calibrate**. You’ll tap highlighted keys in three short sets."))
             }
-            .padding(20)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .card()
-
-            ZStack(alignment: .topLeading) {
-                if text.isEmpty {
-                    Text("Type anything. Nothing here is saved.")
-                        .foregroundStyle(Palette.inkSoft)
-                        .padding(.horizontal, 5)
-                        .padding(.vertical, 8)
-                        .allowsHitTesting(false)
-                        .accessibilityHidden(true)
+            Section {
+                ZStack(alignment: .topLeading) {
+                    if text.isEmpty {
+                        Text("Type anything…")
+                            .foregroundStyle(.secondary)
+                            .padding(.horizontal, 5)
+                            .padding(.vertical, 8)
+                            .allowsHitTesting(false)
+                            .accessibilityHidden(true)
+                    }
+                    TextEditor(text: $text)
+                        .scrollContentBackground(.hidden)
+                        .frame(minHeight: 180)
+                        .accessibilityLabel("Practice text")
+                        .accessibilityHint("Nothing typed here is saved")
                 }
-                TextEditor(text: $text)
-                    .scrollContentBackground(.hidden)
-                    .foregroundStyle(Palette.ink)
-                    .frame(minHeight: 180)
-                    .accessibilityLabel("Practice text")
-                    .accessibilityHint("Nothing typed here is saved")
+            } header: {
+                Text("Practice")
+            } footer: {
+                Text("Nothing here is saved. It’s cleared when you leave this screen.")
             }
-            .padding(14)
-            .card()
-
-            HStack {
-                Text("Cleared when you leave this screen.").font(.footnote).foregroundStyle(Palette.inkSoft)
-                Spacer()
-                Button("Clear") { text = "" }
-                    .buttonStyle(QuietButtonStyle())
-                    .disabled(text.isEmpty)
-                    .opacity(text.isEmpty ? 0.4 : 1)
+            Section("See what it sees") {
+                Text("Turn on **Show my touches** in the keyboard’s \(Image(systemName: "gearshape")) menu. Each tap shows where it landed and which key was chosen.")
             }
-
-            Note(heading: "See what it sees",
-                 text: Text("Turn on **Show my touches** in the keyboard’s \(Image(systemName: "gearshape")) menu. Each tap shows where it landed and which key was chosen."))
+        }
+        .listStyle(.insetGrouped)
+        .navigationTitle(Route.practice.title)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button("Clear") { text = "" }.disabled(text.isEmpty)
+            }
         }
         .onDisappear { text = "" }
     }
 }
 
-// MARK: - Articles
-
 struct ArticleView: View {
-    let title: String
+    let route: Route
     let sections: [(heading: String, body: [LocalizedStringKey])]
 
     var body: some View {
-        Page(title: title) {
+        List {
+            Section { PageHeader(route: route) }
             ForEach(sections.indices, id: \.self) { i in
-                VStack(alignment: .leading, spacing: 10) {
-                    Text(sections[i].heading).font(.headline).foregroundStyle(Palette.ink)
-                    ForEach(sections[i].body.indices, id: \.self) { j in
-                        Text(sections[i].body[j]).foregroundStyle(Palette.inkSoft).fixedSize(horizontal: false, vertical: true)
+                Section {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text(sections[i].heading).font(.headline)
+                        ForEach(sections[i].body.indices, id: \.self) { j in
+                            Text(sections[i].body[j])
+                                .foregroundStyle(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
                     }
+                    .padding(.vertical, 6)
                 }
-                .padding(20)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .card()
             }
         }
+        .listStyle(.insetGrouped)
+        .navigationTitle(route.title)
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 
@@ -391,4 +467,4 @@ enum Copy {
 #Preview("Home, largest text") { HomeView().tint(Palette.accent).dynamicTypeSize(.accessibility3) }
 #Preview("Setup") { NavigationStack { SetupView() }.tint(Palette.accent) }
 #Preview("Practice pad") { NavigationStack { PracticeView() }.tint(Palette.accent) }
-#Preview("Privacy") { NavigationStack { ArticleView(title: "Privacy", sections: Copy.privacy) }.tint(Palette.accent) }
+#Preview("Privacy") { NavigationStack { ArticleView(route: .privacy, sections: Copy.privacy) }.tint(Palette.accent) }

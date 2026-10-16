@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Hero illustration: taps aimed at S keep landing low and to the right, and the keyboard learns that
+/// Hero illustration, drawn for the dark hero card: taps aimed at S keep landing low and to the right, and the keyboard learns that
 /// pattern instead of typing whatever key sits under the finger. Mirrors the keyboard's "Show my touches".
 struct TouchMap: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -22,10 +22,10 @@ struct TouchMap: View {
                         let rect = g.key(r, c)
                         let isTarget = r == target.row && c == target.col
                         let shape = Path(roundedRect: rect, cornerRadius: g.k * 0.16)
-                        ctx.fill(shape, with: .color(isTarget ? Palette.accent.opacity(0.12) : Palette.paper))
-                        ctx.stroke(shape, with: .color(isTarget ? Palette.accent : Palette.line), lineWidth: isTarget ? 1.5 : 1)
+                        ctx.fill(shape, with: .color(.white.opacity(isTarget ? 0.28 : 0.1)))
+                        ctx.stroke(shape, with: .color(.white.opacity(isTarget ? 1 : 0.22)), lineWidth: isTarget ? 1.5 : 1)
                         ctx.draw(Text(String(letter)).font(.system(size: g.k * 0.36, weight: .medium))
-                                    .foregroundColor(isTarget ? Palette.accent : Palette.inkSoft),
+                                    .foregroundColor(.white.opacity(isTarget ? 1 : 0.75)),
                                  at: CGPoint(x: rect.midX, y: rect.midY))
                     }
                 }
@@ -57,7 +57,7 @@ struct TouchMap: View {
                     arrow.addLine(to: CGPoint(x: tip.x - cos(angle + side) * g.k * 0.13,
                                               y: tip.y - sin(angle + side) * g.k * 0.13))
                 }
-                ctx.stroke(arrow, with: .color(Palette.accent), style: StrokeStyle(lineWidth: 1.75, lineCap: .round))
+                ctx.stroke(arrow, with: .color(.white), style: StrokeStyle(lineWidth: 1.75, lineCap: .round))
             }
             .opacity(shown ? 1 : 0)
             .offset(y: shown ? 0 : 4)
@@ -84,4 +84,4 @@ struct TouchMap: View {
     }
 }
 
-#Preview { TouchMap().padding(24).card().padding().background(Palette.paper) }
+#Preview { TouchMap().padding(24).background(Hue.hero.gradient, in: RoundedRectangle(cornerRadius: 28)).padding() }

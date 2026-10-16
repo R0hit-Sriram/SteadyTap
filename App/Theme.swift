@@ -1,70 +1,90 @@
 import SwiftUI
 import UIKit
 
-/// Design tokens. Light and dark live side by side so contrast is checked as a pair.
-/// Text pairs are ≥4.5:1 on both `paper` and `card`; `touch` is decorative-only (≥3:1).
+/// System colours and SF text styles, so light/dark, Increase Contrast and Dynamic Type come for free.
+/// Only the gradients are custom; each one keeps white text ≥4.5:1 across its whole range.
 enum Palette {
-    static let paper = Color(dynamic(0xF5F2EC, 0x161513))   // page background
-    static let card = Color(dynamic(0xFFFFFF, 0x211F1C))
-    static let ink = Color(dynamic(0x1B1A17, 0xF2EFE9))     // primary text
-    static let inkSoft = Color(dynamic(0x5C5850, 0xABA59A)) // secondary text
-    static let line = Color(dynamic(0xE4DFD5, 0x34312C))
-    static let accent = Color(dynamic(0x1E3A8A, 0x9DB4EA))  // actions
-    static let onAccent = Color(dynamic(0xFFFFFF, 0x161513))
-    static let touch = Color(dynamic(0xA16207, 0xE0A53A))   // tap marks in illustrations
-    static let done = Color(dynamic(0x2F6B3F, 0x7CC48F))
+    static let accent = Color.indigo
+    static let background = Color(.systemGroupedBackground)
+    static let surface = Color(.secondarySystemGroupedBackground)
+    static let touch = Color(rgb: 0xFCD34D) // tap marks in the hero illustration
+}
 
-    private static func dynamic(_ light: UInt32, _ dark: UInt32) -> UIColor {
-        UIColor { $0.userInterfaceStyle == .dark ? UIColor(rgb: dark) : UIColor(rgb: light) }
+/// Shortcuts-style tile gradients: lighter top-left, deeper bottom-right.
+enum Hue {
+    case hero, indigo, teal, orange, purple, blue, slate
+
+    private var stops: (UInt32, UInt32) {
+        switch self {
+        case .hero: (0x2B4FD8, 0x1A1F6B)
+        case .indigo: (0x4F46E5, 0x3730A3)
+        case .teal: (0x0F766E, 0x115E59)
+        case .orange: (0xC2410C, 0x9A3412)
+        case .purple: (0x9333EA, 0x6B21A8)
+        case .blue: (0x2563EB, 0x1E40AF)
+        case .slate: (0x475569, 0x334155)
+        }
+    }
+
+    var gradient: LinearGradient {
+        LinearGradient(colors: [Color(rgb: stops.0), Color(rgb: stops.1)], startPoint: .topLeading, endPoint: .bottomTrailing)
     }
 }
 
-private extension UIColor {
-    convenience init(rgb: UInt32) {
-        self.init(red: CGFloat(rgb >> 16 & 0xFF) / 255, green: CGFloat(rgb >> 8 & 0xFF) / 255,
-                  blue: CGFloat(rgb & 0xFF) / 255, alpha: 1)
+extension Color {
+    init(rgb: UInt32) {
+        self.init(red: Double(rgb >> 16 & 0xFF) / 255, green: Double(rgb >> 8 & 0xFF) / 255, blue: Double(rgb & 0xFF) / 255)
     }
 }
 
-extension Font {
-    /// SF throughout, using Apple’s text styles so everything follows Dynamic Type.
-    static let heading = Font.title2.weight(.bold)
-    static let brand = Font.largeTitle.weight(.bold)
-    static let hero = Font.title.weight(.bold)
+/// Rounded-square icon on a gradient, like Settings and Shortcuts.
+struct IconTile: View {
+    let symbol: String
+    let hue: Hue
+    var size: CGFloat = 36
+
+    var body: some View {
+        Image(systemName: symbol)
+            .font(.system(size: size * 0.46, weight: .semibold))
+            .foregroundStyle(.white)
+            .frame(width: size, height: size)
+            .background(hue.gradient, in: RoundedRectangle(cornerRadius: size * 0.27, style: .continuous))
+            .accessibilityHidden(true)
+    }
+}
+
+/// Gentle press: scales the drawing only, so nothing around it moves.
+struct PressStyle: ButtonStyle {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed && !reduceMotion ? 0.96 : 1)
+            .opacity(configuration.isPressed ? 0.85 : 1)
+            .animation(.spring(response: 0.25, dampingFraction: 0.7), value: configuration.isPressed)
+    }
 }
 
 extension View {
-    func card() -> some View {
-        background(Palette.card, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(Palette.line))
+    /// Inset-grouped container, matching List's insetGrouped look on any iOS version.
+    func grouped() -> some View {
+        background(Palette.surface, in: RoundedRectangle(cornerRadius: 26, style: .continuous))
     }
-}
 
-struct PrimaryButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(.headline)
-            .foregroundStyle(Palette.onAccent)
-            .frame(maxWidth: .infinity, minHeight: 54)
-            .background(Palette.accent.opacity(configuration.isPressed ? 0.82 : 1),
-                        in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+    /// Liquid Glass prominent button on iOS 26+, filled button before that.
+    @ViewBuilder func prominentButton() -> some View {
+        if #available(iOS 26, *) {
+            buttonStyle(.glassProminent).controlSize(.large)
+        } else {
+            buttonStyle(.borderedProminent).buttonBorderShape(.capsule).controlSize(.large)
+        }
     }
-}
 
-struct QuietButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(.subheadline.weight(.semibold))
-            .foregroundStyle(Palette.accent)
-            .padding(.horizontal, 16)
-            .frame(minHeight: 44)
-            .background(Palette.accent.opacity(configuration.isPressed ? 0.18 : 0.1), in: Capsule())
-    }
-}
-
-/// Full-width row inside a card; highlights on press without moving anything.
-struct RowButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label.background(configuration.isPressed ? Palette.line.opacity(0.6) : .clear)
+    @ViewBuilder func successHaptic(_ trigger: Bool) -> some View {
+        if #available(iOS 17, *) {
+            sensoryFeedback(.success, trigger: trigger) { _, isOn in isOn }
+        } else {
+            self
+        }
     }
 }
