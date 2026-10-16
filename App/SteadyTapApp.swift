@@ -143,8 +143,10 @@ struct HomeView: View {
             // One column at accessibility text sizes so titles never truncate.
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12),
                                      count: typeSize.isAccessibilitySize ? 1 : 2), spacing: 12) {
-                ForEach([Route.practice, .howItWorks, .comparison, .privacy], id: \.self) { route in
-                    NavigationLink(value: route) { Tile(route: route) }.buttonStyle(PressStyle())
+                ForEach(Array([Route.practice, .howItWorks, .comparison, .privacy].enumerated()), id: \.element) { i, route in
+                    NavigationLink(value: route) { Tile(route: route) }
+                        .buttonStyle(PressStyle())
+                        .rise(after: 0.35 + Double(i) * 0.07)
                 }
             }
         }
@@ -152,9 +154,11 @@ struct HomeView: View {
 }
 
 /// Tips-style feature card: illustration, headline and one clear next action.
+/// Everything rises in on a short stagger; the button then breathes a light sweep and nudges its arrow.
 struct HeroCard: View {
     let action: String
     let onTap: () -> Void
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -162,10 +166,12 @@ struct HeroCard: View {
                 .font(.caption.weight(.semibold))
                 .tracking(0.6)
                 .foregroundStyle(.white.opacity(0.85))
+                .rise(after: 0.05)
             TouchMap()
                 .frame(maxWidth: 320)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 4)
+                .rise(after: 0.12)
             VStack(alignment: .leading, spacing: 8) {
                 Text("A keyboard that learns how you touch.")
                     .font(.title2.bold())
@@ -176,25 +182,55 @@ struct HeroCard: View {
                     .foregroundStyle(.white.opacity(0.9))
                     .fixedSize(horizontal: false, vertical: true)
             }
+            .rise(after: 0.22)
             Button(action: onTap) {
-                Text(action)
-                    .font(.headline)
-                    .foregroundStyle(Color(rgb: 0x1A1F6B))
-                    .frame(maxWidth: .infinity, minHeight: 50)
-                    .background(.white, in: Capsule())
+                HStack(spacing: 8) {
+                    Text(action).contentTransition(.opacity)
+                    nudgingArrow
+                }
+                .font(.headline)
+                .foregroundStyle(Color(rgb: 0x1A1F6B))
+                .frame(maxWidth: .infinity, minHeight: 52)
+                .background(.white, in: Capsule())
+                .modifier(Shimmer(color: Color(rgb: 0x2B4FD8).opacity(0.16)))
+                .shadow(color: .black.opacity(0.18), radius: 10, y: 5)
             }
             .buttonStyle(PressStyle())
             .padding(.top, 4)
+            .rise(after: 0.32)
+            .animation(.easeInOut(duration: 0.25), value: action)
         }
         .padding(20)
-        .background {
+        .background { DriftingGlow(paused: reduceMotion) }
+        .clipShape(RoundedRectangle(cornerRadius: 30, style: .continuous))
+        .glassFinish(cornerRadius: 30)
+        .shadow(color: Color(rgb: 0x1A1F6B).opacity(0.25), radius: 20, y: 10)
+    }
+
+    @ViewBuilder private var nudgingArrow: some View {
+        let arrow = Image(systemName: "arrow.right").accessibilityHidden(true)
+        if #available(iOS 18, *), !reduceMotion {
+            arrow.symbolEffect(.wiggle.forward.byLayer, options: .repeat(.periodic(delay: 2.5)))
+        } else {
+            arrow
+        }
+    }
+}
+
+/// The hero's gradient, with a soft light that slowly circles the card.
+struct DriftingGlow: View {
+    let paused: Bool
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1 / 30, paused: paused)) { timeline in
+            let a = paused ? 0.8 : timeline.date.timeIntervalSinceReferenceDate / 9 * .pi * 2
             ZStack {
                 Hue.hero.gradient
-                RadialGradient(colors: [.white.opacity(0.18), .clear], center: .topTrailing, startRadius: 0, endRadius: 320)
+                RadialGradient(colors: [.white.opacity(0.2), .clear],
+                               center: UnitPoint(x: 0.75 + 0.25 * cos(a), y: 0.2 + 0.15 * sin(a)),
+                               startRadius: 0, endRadius: 300)
             }
         }
-        .clipShape(RoundedRectangle(cornerRadius: 30, style: .continuous))
-        .shadow(color: Color(rgb: 0x1A1F6B).opacity(0.25), radius: 20, y: 10)
     }
 }
 
@@ -244,16 +280,19 @@ struct StepRow: View {
     }
 }
 
-/// Shortcuts-style tile.
+/// Shortcuts-style tile with a half-strength glass finish.
 struct Tile: View {
     let route: Route
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             Image(systemName: route.symbol)
-                .font(.title2.weight(.semibold))
+                .font(.title3.weight(.semibold))
+                .frame(width: 44, height: 44)
+                .background(.white.opacity(0.18), in: Circle())
+                .overlay(Circle().strokeBorder(.white.opacity(0.45), lineWidth: 1))
                 .accessibilityHidden(true)
-            Spacer(minLength: 28)
+            Spacer(minLength: 20)
             Text(route.title)
                 .font(.headline)
                 .multilineTextAlignment(.leading)
@@ -261,8 +300,10 @@ struct Tile: View {
         }
         .foregroundStyle(.white)
         .padding(16)
-        .frame(maxWidth: .infinity, minHeight: 116, alignment: .leading)
+        .frame(maxWidth: .infinity, minHeight: 124, alignment: .leading)
         .background(route.hue.gradient, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .glassFinish(cornerRadius: 24)
+        .shadow(color: .black.opacity(0.12), radius: 10, y: 5)
     }
 }
 

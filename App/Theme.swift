@@ -7,7 +7,7 @@ enum Palette {
     static let accent = Color.indigo
     static let background = Color(.systemGroupedBackground)
     static let surface = Color(.secondarySystemGroupedBackground)
-    static let touch = Color(rgb: 0xFCD34D) // tap marks in the hero illustration
+    static let touch = Color(rgb: 0xE5262B) // fingerprint in the hero illustration
 }
 
 /// Shortcuts-style tile gradients: lighter top-left, deeper bottom-right.
@@ -65,7 +65,73 @@ struct PressStyle: ButtonStyle {
     }
 }
 
+/// Half-strength Liquid Glass look: a top sheen and a bright rim over whatever fill is underneath.
+/// Drawn by hand rather than with .glassEffect so white text keeps its contrast on the colour below.
+struct GlassFinish: ViewModifier {
+    let cornerRadius: CGFloat
+
+    func body(content: Content) -> some View {
+        let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+        content
+            .overlay {
+                shape.fill(LinearGradient(colors: [.white.opacity(0.24), .white.opacity(0.05), .clear],
+                                          startPoint: .top, endPoint: .center))
+                    .allowsHitTesting(false)
+            }
+            .overlay {
+                shape.strokeBorder(LinearGradient(colors: [.white.opacity(0.6), .white.opacity(0.08), .white.opacity(0.28)],
+                                                  startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: 1)
+                    .allowsHitTesting(false)
+            }
+    }
+}
+
+/// Fades and lifts a view in after `delay`; instant with Reduce Motion.
+struct Rise: ViewModifier {
+    let delay: Double
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var shown = false
+
+    func body(content: Content) -> some View {
+        content
+            .opacity(shown ? 1 : 0)
+            .offset(y: shown ? 0 : 14)
+            .onAppear {
+                if reduceMotion { shown = true } else {
+                    withAnimation(.spring(response: 0.55, dampingFraction: 0.8).delay(delay)) { shown = true }
+                }
+            }
+    }
+}
+
+/// A light band that sweeps across a capsule every few seconds.
+struct Shimmer: ViewModifier {
+    let color: Color
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var x: CGFloat = -0.6
+
+    func body(content: Content) -> some View {
+        content.overlay {
+            if !reduceMotion {
+                GeometryReader { geo in
+                    LinearGradient(colors: [.clear, color, .clear], startPoint: .leading, endPoint: .trailing)
+                        .frame(width: geo.size.width * 0.45)
+                        .offset(x: x * geo.size.width)
+                }
+                .clipShape(Capsule())
+                .allowsHitTesting(false)
+                .onAppear {
+                    withAnimation(.easeInOut(duration: 1.4).delay(2).repeatForever(autoreverses: false)) { x = 1.2 }
+                }
+            }
+        }
+    }
+}
+
 extension View {
+    func glassFinish(cornerRadius: CGFloat) -> some View { modifier(GlassFinish(cornerRadius: cornerRadius)) }
+    func rise(after delay: Double) -> some View { modifier(Rise(delay: delay)) }
+
     /// Inset-grouped container, matching List's insetGrouped look on any iOS version.
     func grouped() -> some View {
         background(Palette.surface, in: RoundedRectangle(cornerRadius: 26, style: .continuous))
