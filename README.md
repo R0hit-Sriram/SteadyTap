@@ -124,7 +124,7 @@ The toolbar shows the top-three probabilities and two lines: what a fixed keyboa
 
 | | Status |
 |---|---|
-| Touch engine + 56 unit tests (calibration, scoring, sparse data, ambiguity, repeated letters, undo/choice, per-layer evaluation, online learning under drift and no drift, labeling rules, change detection, whole-word fixing, comparison statistics, storage, delete, no typed text on disk) | **Implemented and passing** (`swift test`, Swift 5.10) |
+| Touch engine + 58 unit tests (calibration, scoring, sparse data, ambiguity, repeated letters, undo/choice, per-layer evaluation, online learning under drift and no drift, labeling rules, change detection, whole-word fixing, comparison statistics, storage, delete, no typed text on disk) | **Implemented and passing** (`swift test`, Swift 5.10) |
 | Keyboard extension and containing app | **Written and syntax-checked only.** Not yet compiled in Xcode or run on an iPhone. |
 | Device behavior (enabling, typing in other apps, switching, persistence, secure fields) | **Not yet verified.** See the checklist. |
 | Testing with people who have motor difficulties | **Not done.** Do not claim results until it is. |

@@ -246,6 +246,8 @@ final class KeyboardController: ObservableObject {
     /// Write the profile to disk (also called when the keyboard closes).
     func persist() {
         if let profile { try? store.save(profile) }
+        // Keyboard closed on the results screen: keep the scores if asked, instead of losing them.
+        if screen == .comparisonDone { closeComparison() }
     }
 
     /// Forget what was learned while typing; keep the calibration.

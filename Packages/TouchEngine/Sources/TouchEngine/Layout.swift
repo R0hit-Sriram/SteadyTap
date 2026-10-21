@@ -22,6 +22,13 @@ public struct Key: Equatable, Sendable {
     /// Character and space keys are interpreted by the touch model; the rest are plain hit-tested buttons.
     public var isDecodable: Bool { kind == .character || kind == .space }
 
+    /// Where on this key a tap at `p` was aimed: the center, or for a wide key (space) the nearest point
+    /// along its middle, so a tap near the end of the space bar isn't "far" from it.
+    public func aim(for p: Vec2, keyWidth kw: Double) -> Vec2 {
+        let c = frame.center, half = max(0, (frame.w - kw) / 2)
+        return Vec2(min(max(p.x, c.x - half), c.x + half), c.y)
+    }
+
     /// Text this key types, before shift is applied.
     public var output: String? {
         switch kind {

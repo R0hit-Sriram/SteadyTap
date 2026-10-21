@@ -103,7 +103,7 @@ public enum OnlineLearner {
             startedFast = true
         }
 
-        let r = touch.point - key.frame.center
+        let r = touch.point - key.aim(for: touch.point, keyWidth: layout.keyWidth)
         guard touch.kind.weight > 0, r.length <= ModelFitter.outlierFraction * layout.keyWidth else { return startedFast }
 
         // 2. Fade everything learned so far.

@@ -133,6 +133,27 @@ final class WordFixTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(steadyOn, steadyOff, "never worse for a steady typist")
     }
 
+    func testTapsAcrossTheSpaceBarTypeSpace() {
+        let space = layout390.key(id: "space")!.frame
+        let model = TouchModel.untrained(keyWidth: layout390.keyWidth)
+        for f in [0.2, 0.5, 0.8] {
+            let p = Vec2(space.x + f * space.w, space.center.y - 10)
+            XCTAssertEqual(Decoder.score(point: p, layout: layout390, model: model)[0].keyID, "space", "at \(f) of the bar")
+        }
+    }
+
+    func testPickingSpaceInTheChoiceBarDoesNotBreakWordFixing() {
+        let (session, buffer) = wordSession()
+        defer { withExtendedLifetime(buffer) {} }
+        session.askThreshold = 0.99
+        type("go", session)
+        session.handle(tapAt(center("b") + Vec2(0, 20), t: 5), layout: layout390)
+        if session.pendingChoice?.alternative == " " { session.chooseAlternative() } else { session.acceptChoice(); type(" ", session) }
+        session.askThreshold = 0.7
+        type("home ", session) // must not crash
+        XCTAssertTrue(buffer.text.hasSuffix("home "))
+    }
+
     func testOldSettingsTurnWordFixingOn() throws {
         let s = try JSONDecoder().decode(KeyboardSettings.self, from: Data(#"{"adaptationOn":true}"#.utf8))
         XCTAssertTrue(s.fixWords)

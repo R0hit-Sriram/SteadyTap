@@ -216,8 +216,11 @@ public final class TypingSession {
         target.insert(choice.alternative)
         undo = .replaced(old: choice.inserted, new: choice.alternative)
         stats.choicesChanged += 1
-        if word.last?.output == choice.inserted, let letter = choice.alternative.lowercased().first {
+        if word.last?.output == choice.inserted, let letter = choice.alternative.lowercased().first,
+           choice.alternative.count == 1, LetterContext.index(of: letter) < 26 {
             word[word.count - 1] = (choice.alternative, WordFixer.certain(letter))
+        } else {
+            word = [] // a space or punctuation picked here ends the word
         }
         labelLast(LabeledTouch(kind: .picked, keyID: choice.alternativeKeyID, point: choice.point, misread: true),
                   newOutput: choice.alternative)
@@ -332,6 +335,7 @@ public final class TypingSession {
     public func repeatBackspace() {
         pendingChoice = nil
         pendingExtra = nil
+        lastWordFix = nil
         deleteOne()
         refreshAutoShift()
     }
@@ -362,6 +366,7 @@ public final class TypingSession {
         pendingExtra = nil
         target?.insert(extra)
         undo = .inserted(extra)
+        forgetRecent() // this letter isn't tied to a tracked touch
     }
 
     public var canUndo: Bool { undo != nil }

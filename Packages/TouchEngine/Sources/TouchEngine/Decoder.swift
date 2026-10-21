@@ -65,7 +65,7 @@ public enum Decoder {
         context: LetterContext? = nil, previous: Character? = nil, contextWeight: Double = defaultContextWeight
     ) -> [Candidate] {
         let raw = layout.decodableKeys.map { key -> (String, Double, Double) in
-            let touch = model.cov(for: key).logDensity(p - key.frame.center - model.offset(for: key))
+            let touch = model.cov(for: key).logDensity(p - key.aim(for: p, keyWidth: model.keyWidth) - model.offset(for: key))
             let hint = context?.logBoost(previous: previous, nextKeyID: key.id) ?? 0
             return (key.id, touch, touch + contextWeight * hint)
         }

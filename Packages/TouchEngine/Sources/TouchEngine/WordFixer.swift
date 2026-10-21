@@ -90,7 +90,8 @@ public enum WordFixer {
     /// The fix for `typed` (lowercase a–z, one evidence row per letter), or nil to leave it alone.
     public static func fix(typed: String, evidence: [[Double]], words: WordList) -> Fix? {
         guard typed.count == evidence.count, (2 ... maxLength).contains(typed.count),
-              let entries = words.byLength[typed.count] else { return nil }
+              let entries = words.byLength[typed.count],
+              typed.allSatisfy({ LetterContext.index(of: $0) < 26 }) else { return nil }
 
         func touch(_ letters: [Int]) -> Double { zip(letters, evidence).reduce(0) { $0 + $1.1[$1.0] } }
         var scores = entries.map { (word: $0.word, score: touch($0.letters) + $0.logPrior) }
