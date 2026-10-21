@@ -508,7 +508,6 @@ boys 132594
 line 132433
 send 131999
 news 131599
-stupid 131497
 bed 131445
 hurry 130182
 full 129735
@@ -620,7 +619,6 @@ others 96631
 catch 96609
 follow 96529
 sense 96442
-sex 96431
 lie 95930
 evening 95321
 master 95131
@@ -859,7 +857,6 @@ honor 62722
 lunch 62582
 miles 62523
 radio 62502
-idiot 62357
 ball 62325
 surprise 62170
 paper 62166
@@ -1183,7 +1180,6 @@ alex 42710
 dollars 42705
 allow 42649
 nine 42538
-gay 42536
 department 42487
 guilty 42459
 apart 42417
@@ -1625,7 +1621,6 @@ h 29291
 afford 29290
 sunday 29282
 total 29264
-dumb 29229
 threw 29223
 france 29172
 birth 29167
@@ -1767,7 +1762,6 @@ sending 26184
 paint 26174
 remind 26171
 pal 26163
-naked 26122
 post 26113
 sugar 26110
 heading 26098
@@ -2045,7 +2039,6 @@ grave 21831
 chase 21830
 role 21813
 odd 21790
-sexy 21774
 faces 21771
 becomes 21768
 closes 21761
@@ -2064,7 +2057,6 @@ golden 21644
 patients 21543
 watched 21542
 committed 21517
-sexual 21499
 suffer 21496
 arthur 21491
 wherever 21483
@@ -2552,7 +2544,6 @@ sports 16468
 wanting 16465
 debt 16464
 wishes 16453
-hitler 16449
 wire 16416
 thee 16410
 circle 16410
@@ -2567,7 +2558,6 @@ joined 16342
 education 16326
 bravo 16320
 library 16307
-rape 16303
 wings 16298
 growling 16293
 thrown 16290
@@ -3109,7 +3099,6 @@ hannah 12632
 everyday 12627
 generous 12622
 gain 12620
-idiots 12614
 holly 12610
 enjoyed 12603
 jungle 12593
@@ -3212,7 +3201,6 @@ environment 12101
 western 12101
 average 12100
 ease 12094
-raped 12088
 interrupt 12088
 judy 12085
 satisfied 12083
@@ -3561,7 +3549,6 @@ wheels 10557
 shocked 10546
 reverend 10539
 commercial 10539
-escort 10537
 engagement 10535
 corpse 10531
 louise 10525
@@ -3645,7 +3632,6 @@ obey 10262
 dancer 10251
 remote 10235
 daughters 10230
-moron 10229
 latin 10223
 teachers 10214
 toby 10209
@@ -3667,7 +3653,6 @@ fort 10152
 choices 10148
 alley 10145
 supper 10144
-penis 10143
 alibi 10141
 sammy 10138
 pole 10136
@@ -4150,7 +4135,6 @@ phase 8690
 prom 8687
 suggesting 8686
 fleet 8685
-lame 8681
 irish 8678
 editor 8675
 october 8672
@@ -4748,7 +4732,6 @@ romeo 7286
 belief 7284
 storage 7281
 rusty 7276
-psycho 7269
 climbing 7269
 melissa 7267
 fears 7266
@@ -5028,7 +5011,6 @@ brandy 6713
 sweater 6711
 locate 6706
 apologise 6701
-nazi 6700
 parole 6694
 examine 6694
 trains 6692
@@ -5233,7 +5215,6 @@ pirate 6318
 meals 6318
 performing 6317
 remained 6315
-prostitute 6312
 adams 6312
 retirement 6309
 platform 6308
@@ -5259,7 +5240,6 @@ owners 6276
 length 6276
 dentist 6275
 zach 6274
-lesbian 6274
 enterprise 6274
 tournament 6273
 travelling 6273
@@ -5408,7 +5388,6 @@ bowling 6056
 buttons 6055
 confusion 6054
 thud 6046
-hooker 6042
 ruining 6041
 dreadful 6041
 collecting 6036
@@ -5622,7 +5601,6 @@ arrogant 5748
 simpson 5745
 piper 5744
 knocks 5743
-sperm 5741
 gesture 5741
 materials 5740
 lindsay 5736
@@ -5653,7 +5631,6 @@ creek 5700
 pony 5698
 cleaner 5698
 businessman 5697
-lunatic 5695
 unlikely 5694
 gal 5694
 situations 5693
@@ -5838,7 +5815,6 @@ transmission 5439
 panel 5438
 sole 5438
 sequence 5438
-sexually 5438
 georgie 5436
 hugo 5436
 denny 5435
@@ -5912,7 +5888,6 @@ calendar 5363
 hal 5363
 miracles 5363
 balcony 5359
-horny 5357
 regard 5357
 valerie 5356
 fold 5355
@@ -5974,7 +5949,6 @@ pouring 5275
 distress 5275
 tanner 5274
 telegram 5273
-pimp 5272
 dip 5272
 trophy 5272
 marilyn 5269
@@ -6261,7 +6235,6 @@ desperately 4973
 accidents 4973
 alcoholic 4973
 fabric 4971
-nazis 4969
 railway 4969
 sal 4969
 dame 4968
@@ -6322,7 +6295,6 @@ divide 4907
 slightest 4906
 discount 4906
 yoga 4906
-vagina 4905
 rushing 4905
 modest 4904
 wes 4902
@@ -7221,7 +7193,6 @@ strangled 4011
 thorough 4010
 ike 4009
 bites 4008
-nude 4008
 tidy 4007
 patricia 4007
 tate 4006
@@ -7323,7 +7294,6 @@ activate 3912
 slapped 3911
 heroic 3908
 roar 3907
-queer 3906
 uk 3905
 matching 3905
 trump 3904
@@ -7525,7 +7495,6 @@ container 3743
 lori 3743
 secured 3742
 tossed 3741
-stripper 3741
 steele 3740
 waving 3739
 clamoring 3739
@@ -8273,7 +8242,6 @@ funky 3239
 kitten 3239
 nicest 3238
 deceive 3237
-negro 3236
 chopped 3236
 consultant 3236
 rifles 3234
@@ -8720,7 +8688,6 @@ amazon 2984
 flooded 2983
 torment 2983
 mermaid 2983
-rapist 2983
 sanders 2982
 triggered 2982
 expects 2982
@@ -8738,7 +8705,6 @@ printing 2975
 yuck 2975
 shorty 2975
 extract 2973
-prostitutes 2971
 cherish 2971
 logs 2970
 takin 2969
@@ -8759,7 +8725,6 @@ insists 2957
 calf 2956
 oof 2956
 allowance 2955
-homosexual 2955
 vijay 2954
 shapes 2954
 rosemary 2953
@@ -8808,7 +8773,6 @@ scope 2927
 cultures 2926
 speakers 2925
 superstar 2925
-orgasm 2924
 byron 2924
 gravy 2924
 calculations 2924
@@ -8846,7 +8810,6 @@ mal 2904
 smartest 2904
 blacks 2904
 struggled 2903
-prostitution 2902
 payback 2902
 buenos 2901
 vintage 2901
@@ -8923,7 +8886,6 @@ invaded 2868
 quentin 2867
 equation 2866
 transmitter 2866
-morons 2866
 lime 2866
 rotting 2866
 remorse 2865
@@ -9016,7 +8978,6 @@ lucifer 2822
 contribute 2822
 jewellery 2821
 richards 2821
-erotic 2820
 feng 2818
 siblings 2818
 est 2818
@@ -9061,7 +9022,6 @@ incidents 2796
 telly 2794
 capsule 2794
 chefs 2794
-psychopath 2793
 dumpster 2793
 lire 2792
 jarod 2792
@@ -9174,7 +9134,6 @@ stupidity 2750
 restricted 2750
 skating 2750
 pupil 2750
-homo 2750
 thumbs 2749
 hostess 2748
 cheng 2748
@@ -9293,7 +9252,6 @@ athens 2701
 abu 2701
 kramer 2700
 magnet 2700
-psychotic 2699
 vaccine 2698
 motivated 2698
 aggression 2698
@@ -9931,7 +9889,6 @@ elijah 2439
 annoy 2439
 loaf 2438
 commercials 2438
-idiotic 2438
 inconvenience 2437
 plum 2437
 solicitor 2437
@@ -9962,7 +9919,6 @@ moody 2426
 donated 2426
 reich 2426
 receiver 2426
-semen 2425
 converted 2424
 rags 2424
 harness 2423
@@ -10038,7 +9994,6 @@ destructive 2395
 grilled 2395
 oregon 2395
 copied 2395
-hookers 2395
 paycheck 2395
 solitude 2395
 panther 2395
@@ -10341,7 +10296,6 @@ emilio 2284
 prevented 2283
 withdrawal 2283
 pry 2283
-sexuality 2282
 br 2282
 vinnie 2282
 considerate 2280
@@ -10453,7 +10407,6 @@ cognac 2241
 careers 2240
 sim 2240
 caps 2240
-imbecile 2240
 steaks 2240
 cove 2239
 lair 2239
@@ -10774,7 +10727,6 @@ acceptance 2126
 traveler 2126
 timeline 2125
 emerald 2125
-gays 2125
 pc 2124
 hassle 2123
 thrilling 2123
@@ -11155,7 +11107,6 @@ attorneys 2016
 apes 2016
 captioning 2016
 desmond 2015
-lesbians 2015
 fairies 2015
 monitors 2014
 hua 2014
@@ -11249,7 +11200,6 @@ burner 1994
 fluffy 1994
 melancholy 1993
 puppets 1993
-anal 1993
 grieve 1992
 awe 1992
 gallons 1992
@@ -11434,7 +11384,6 @@ paws 1945
 chariot 1944
 havoc 1944
 andreas 1944
-midget 1944
 celestial 1944
 cetera 1944
 nino 1944
@@ -12047,7 +11996,6 @@ anguish 1789
 whim 1789
 nada 1788
 leaks 1788
-cum 1787
 cupid 1787
 hana 1787
 colonial 1787
@@ -12385,7 +12333,6 @@ rating 1712
 regulation 1712
 raving 1712
 dioxide 1712
-boner 1712
 bc 1711
 implant 1711
 mari 1711
@@ -12475,7 +12422,6 @@ arsehole 1690
 graduating 1690
 partially 1689
 sensing 1689
-kinky 1689
 titans 1689
 microscope 1689
 intimidating 1689
@@ -13028,7 +12974,6 @@ enterprises 1579
 designing 1579
 suspense 1579
 patti 1579
-japs 1578
 renounce 1578
 paints 1578
 relying 1578
@@ -13374,7 +13319,6 @@ resisted 1515
 leila 1515
 snail 1515
 ursula 1515
-strippers 1515
 vista 1514
 sorta 1514
 fiend 1514
@@ -13395,7 +13339,6 @@ medallion 1512
 eiffel 1512
 yamato 1511
 wilder 1511
-dyke 1511
 bailiff 1511
 peril 1510
 plaintiff 1510
@@ -14185,7 +14128,6 @@ hiroshima 1378
 imitation 1378
 footprint 1378
 beaumont 1377
-stupidest 1377
 unborn 1377
 jacobs 1377
 displayed 1377
@@ -14533,7 +14475,6 @@ pickled 1327
 novelty 1327
 equations 1326
 doubtful 1326
-sexist 1326
 capone 1326
 buffer 1326
 castles 1326
@@ -14546,7 +14487,6 @@ flo 1324
 potty 1324
 algeria 1324
 geometry 1324
-dumbest 1324
 bahamas 1324
 bleating 1324
 horizontal 1324
@@ -14568,7 +14508,6 @@ traits 1321
 implement 1321
 supervise 1321
 evident 1321
-skank 1321
 lucious 1321
 gogh 1321
 analyzing 1321
@@ -14614,7 +14553,6 @@ residential 1315
 envelopes 1315
 tortoise 1314
 unjust 1314
-fetish 1314
 blasts 1314
 completion 1314
 davenport 1314
@@ -14722,7 +14660,6 @@ hymn 1299
 audit 1299
 slashed 1298
 frantic 1298
-negroes 1298
 calves 1298
 pao 1298
 aloha 1298
@@ -15526,7 +15463,6 @@ estates 1192
 fatima 1192
 pods 1192
 assisting 1192
-molested 1191
 offerings 1191
 believable 1191
 airports 1191
@@ -15600,7 +15536,6 @@ watkins 1182
 eisenhower 1181
 cullen 1181
 commodity 1181
-bimbo 1181
 starbucks 1181
 riverside 1181
 dismissal 1180
@@ -15777,7 +15712,6 @@ uncanny 1160
 salaam 1160
 rainforest 1160
 arlo 1160
-lunatics 1159
 ebay 1159
 futures 1159
 confederate 1159
@@ -15952,7 +15886,6 @@ outraged 1140
 lurch 1140
 ultimatum 1139
 delegate 1139
-pedophile 1139
 directive 1139
 pleaded 1138
 reducing 1138
@@ -16129,7 +16062,6 @@ cheerio 1118
 unimaginable 1118
 stimulate 1118
 incriminating 1118
-jap 1118
 clangs 1118
 fanatic 1118
 surreal 1117
@@ -16564,7 +16496,6 @@ uninvited 1068
 insider 1068
 kamal 1068
 moz 1068
-bondage 1068
 chao 1067
 taser 1067
 indifference 1067
@@ -16666,7 +16597,6 @@ stitched 1057
 abruptly 1057
 stacks 1057
 sioux 1057
-rapes 1057
 ether 1057
 hoodie 1057
 namaste 1057
@@ -17549,7 +17479,6 @@ clogged 969
 lax 969
 clank 969
 remington 969
-pimps 969
 footing 969
 twists 969
 securing 969
@@ -17648,7 +17577,6 @@ dredge 960
 crutches 960
 rabble 960
 handgun 960
-vaginal 960
 announcements 960
 infections 960
 corral 960
@@ -17702,7 +17630,6 @@ escorting 955
 maris 955
 ephram 955
 aiding 955
-penises 955
 upgraded 955
 inserted 954
 aspirations 954
@@ -18128,7 +18055,6 @@ seminary 919
 bicycles 919
 sculpting 919
 condescending 919
-orgasms 919
 lenore 919
 moonshine 919
 incurable 919
@@ -18316,7 +18242,6 @@ grandeur 906
 deke 905
 prasad 905
 showering 905
-dildo 905
 executions 905
 corroborate 905
 contingency 905
@@ -18470,7 +18395,6 @@ madden 892
 snip 892
 hernia 892
 philosophers 892
-rapists 892
 recommending 892
 highways 892
 bloodline 892
@@ -18506,7 +18430,6 @@ beets 890
 izzie 890
 racetrack 890
 ganesh 889
-escorts 889
 leaps 889
 rajesh 889
 parson 889
@@ -19174,7 +19097,6 @@ fam 832
 diablo 832
 leone 832
 daydreaming 832
-incest 832
 abba 832
 mathilde 832
 unanswered 832
@@ -19682,7 +19604,6 @@ pinching 797
 sideshow 797
 allegation 797
 polio 797
-hoe 797
 motorway 797
 sayonara 797
 lastly 797

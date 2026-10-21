@@ -13,7 +13,9 @@ KEEP = 20000
 BLOCKED_PREFIXES = ("fuck", "shit", "bitch", "cunt", "nigg", "fag", "retard", "whore", "slut", "motherf",
                     "dick", "cock", "pussy", "asshole", "bastard", "twat", "wank", "piss", "jackass",
                     "dumbass", "bullshit", "goddamn", "tits", "porn", "spastic", "cripple")
-BLOCKED = {"ass", "damn", "crap", "prick", "spaz", "tit", "boob", "boobs", "hell"}
+BLOCKED_PREFIXES += ('negro', 'dyke', 'skank', 'rape', 'rapist', 'nazi', 'hitler', 'midget', 'tranny', 'nigger', 'jizz', 'dildo', 'orgasm', 'sperm', 'semen', 'penis', 'vagina', 'boner', 'horny', 'milf', 'hooker', 'porno', 'molest', 'pedophil', 'incest', 'kike', 'chink', 'wetback', 'gook', 'beaner', 'raghead', 'towelhead', 'mongoloid', 'imbecile', 'cretin', 'stripper', 'prostitut', 'erotic', 'kinky', 'fetish', 'bondage')
+BLOCKED_EXTRA = ['anal', 'bimbo', 'coon', 'coons', 'cum', 'darkie', 'dumb', 'dumbest', 'escort', 'escorts', 'gay', 'gays', 'hoe', 'hoes', 'homo', 'homos', 'homosexual', 'idiot', 'idiotic', 'idiots', 'jap', 'japs', 'lame', 'lesbian', 'lesbians', 'lunatic', 'lunatics', 'moron', 'morons', 'naked', 'nude', 'nudes', 'paki', 'pakis', 'pimp', 'pimps', 'psycho', 'psychopath', 'psychos', 'psychotic', 'queer', 'queers', 'retard', 'retards', 'sex', 'sexist', 'sexual', 'sexuality', 'sexually', 'sexy', 'spic', 'spics', 'stupid', 'stupidest', 'thot']
+BLOCKED = set(BLOCKED_EXTRA) | {"ass", "damn", "crap", "prick", "spaz", "tit", "boob", "boobs", "hell"}
 
 words = []
 for line in open(sys.argv[1], encoding="utf-8"):
