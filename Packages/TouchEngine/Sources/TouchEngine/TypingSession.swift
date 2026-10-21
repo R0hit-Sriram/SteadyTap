@@ -29,6 +29,8 @@ public struct SessionStats: Codable, Equatable, Sendable {
     public var adaptationChanges = 0
     /// Taps where the letter-pair hint (not touch) decided the key.
     public var hintChanges = 0
+    /// Whole words fixed when space was pressed.
+    public var wordFixes = 0
     public init() {}
 
     public init(from decoder: Swift.Decoder) throws {
@@ -39,6 +41,7 @@ public struct SessionStats: Codable, Equatable, Sendable {
         choicesChanged = try c.decodeIfPresent(Int.self, forKey: .choicesChanged) ?? 0
         adaptationChanges = try c.decodeIfPresent(Int.self, forKey: .adaptationChanges) ?? 0
         hintChanges = try c.decodeIfPresent(Int.self, forKey: .hintChanges) ?? 0
+        wordFixes = try c.decodeIfPresent(Int.self, forKey: .wordFixes) ?? 0
     }
 }
 
@@ -54,6 +57,11 @@ public final class TypingSession {
         public let point: Vec2
     }
 
+    public struct WordFix: Equatable {
+        public let typed: String
+        public let fixed: String
+    }
+
     public enum Undo: Equatable {
         case inserted(String)
         case deleted(String)
@@ -64,6 +72,8 @@ public final class TypingSession {
     /// nil = fixed keyboard.
     public var model: TouchModel?
     public var context: LetterContext?
+    /// nil = don't fix whole words. Only used with an adapted model (it needs per-letter probabilities).
+    public var words: WordList?
     public var askThreshold = 0.7
     public var autoCapitalize = true {
         didSet { if autoCapitalize { refreshAutoShift() } else if shift == .once { shift = .off } }
@@ -85,6 +95,9 @@ public final class TypingSession {
     }
     private var recent: [RecentTouch] = []
     private var deletedTouch: RecentTouch?
+    /// The word being typed: each letter and how likely each a–z was for its tap. MEMORY ONLY; cleared at
+    /// the next space or non-letter key.
+    private var word: [(output: String, evidence: [Double])] = []
     public static let recentLimit = 3
     public static let confidentThreshold = 0.9
     public static let correctionWindow = 5.0
@@ -100,6 +113,8 @@ public final class TypingSession {
     public private(set) var lastDecision: Decision?
     public private(set) var undo: Undo?
     public private(set) var stats = SessionStats()
+    /// Set when the last space fixed a word; cleared by the next key.
+    public private(set) var lastWordFix: WordFix?
 
     /// Demo-only, memory-only: the last few characters as a fixed keyboard vs. we read them.
     public var recordsDemoLine = false
@@ -132,12 +147,15 @@ public final class TypingSession {
         lastGesture = gesture
         pendingChoice = nil
         pendingExtra = nil
+        lastWordFix = nil
 
         switch key.kind {
         case .character, .space:
+            if key.kind == .space, !decision.isAmbiguous { fixWord() }
             let text = cased(key.output ?? "")
             target?.insert(text)
-            undo = .inserted(text)
+            undo = lastWordFix.map { .replaced(old: $0.typed + text, new: $0.fixed + text) } ?? .inserted(text)
+            trackWord(key: key, output: text, decision: decision)
             if decision.adaptationChangedIt { stats.adaptationChanges += 1 }
             if model != nil, !decision.candidates.isEmpty {
                 noteTyped(keyID: key.id, output: text, decision: decision, time: gesture.up.t)
@@ -185,6 +203,9 @@ public final class TypingSession {
         target.insert(choice.alternative)
         undo = .replaced(old: choice.inserted, new: choice.alternative)
         stats.choicesChanged += 1
+        if word.last?.output == choice.inserted, let letter = choice.alternative.lowercased().first {
+            word[word.count - 1] = (choice.alternative, WordFixer.certain(letter))
+        }
         labelLast(LabeledTouch(kind: .picked, keyID: choice.alternativeKeyID, point: choice.point, misread: true),
                   newOutput: choice.alternative)
         if recordsDemoLine, !demoAdapted.isEmpty {
@@ -198,8 +219,52 @@ public final class TypingSession {
     public func acceptChoice() {
         guard let choice = pendingChoice else { return }
         pendingChoice = nil
+        if word.last?.output == choice.inserted, let letter = choice.inserted.lowercased().first {
+            word[word.count - 1].evidence = WordFixer.certain(letter)
+        }
         labelLast(LabeledTouch(kind: .picked, keyID: choice.insertedKeyID, point: choice.point, misread: false),
                   newOutput: choice.inserted)
+    }
+
+    // MARK: Fixing whole words
+
+    private func trackWord(key: Key, output: String, decision: Decision) {
+        let isLetter = key.kind == .character && LetterContext.index(of: key.id.first ?? " ") < 26
+        guard isLetter, model != nil, let evidence = WordFixer.letterEvidence(decision.candidates) else {
+            word = []
+            return
+        }
+        word.append((output, evidence))
+    }
+
+    /// Called just before a space is typed: replace the word if a listed word is clearly more likely.
+    private func fixWord() {
+        defer { word = [] }
+        guard let words, model != nil, let target, let before = target.textBeforeCursor else { return }
+        let typed = word.map(\.output).joined()
+        // The text must still end with exactly the letters we typed (the cursor didn't move).
+        guard !typed.isEmpty, before.hasSuffix(typed), before.dropLast(typed.count).last?.isLetter != true else { return }
+        let lower = typed.lowercased()
+        let capitalized = typed != lower
+        guard !capitalized || typed == lower.prefix(1).uppercased() + lower.dropFirst() else { return } // ALL CAPS etc.
+        guard let fix = WordFixer.fix(typed: lower, evidence: word.map(\.evidence), words: words) else { return }
+        let fixed = capitalized ? fix.word.prefix(1).uppercased() + fix.word.dropFirst() : fix.word
+
+        for _ in typed { target.deleteBackward() }
+        target.insert(fixed)
+        lastWordFix = WordFix(typed: typed, fixed: fixed)
+        stats.wordFixes += 1
+        if recordsDemoLine { demoAdapted = String((demoAdapted.dropLast(typed.count) + fixed).suffix(40)) }
+        // Keep the recent-letter buffer matching the text. A word fix is a guess, not a label: don't learn from it.
+        let letters = fixed.map(String.init)
+        for j in 0 ..< min(recent.count, letters.count) {
+            let i = recent.count - 1 - j, out = letters[letters.count - 1 - j]
+            if recent[i].output != out {
+                recent[i].output = out
+                recent[i].keyID = out.lowercased()
+                recent[i].labeled = true
+            }
+        }
     }
 
     // MARK: Turning normal typing into labeled touches
@@ -245,6 +310,7 @@ public final class TypingSession {
     private func forgetRecent() {
         recent = []
         deletedTouch = nil
+        word = []
     }
 
     private func emit(_ label: LabeledTouch) { onLabeledTouch?(label) }
@@ -268,6 +334,7 @@ public final class TypingSession {
             forgetRecent()
         }
         if let last = lastChar { undo = .deleted(String(last)) }
+        if let lastChar, word.last?.output == String(lastChar) { word.removeLast() } else { word = [] }
         target?.deleteBackward()
         stats.backspaces += 1
         if recordsDemoLine {

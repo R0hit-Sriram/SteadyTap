@@ -24,6 +24,8 @@ public struct KeyboardSettings: Codable, Equatable, Sendable {
     public var showTouches = false
     /// Keep updating the touch model from everyday typing (picks, corrections, confident taps).
     public var keepAdapting = true
+    /// When space is pressed, replace a misspelled word if a common word fits the taps much better.
+    public var fixWords = true
     public var holdToDelete = true
     public var comparisonRuns = 0
     public init() {}
@@ -38,6 +40,7 @@ public struct KeyboardSettings: Codable, Equatable, Sendable {
         useLetterPatterns = try c.decodeIfPresent(Bool.self, forKey: .useLetterPatterns) ?? d.useLetterPatterns
         showTouches = try c.decodeIfPresent(Bool.self, forKey: .showTouches) ?? d.showTouches
         keepAdapting = try c.decodeIfPresent(Bool.self, forKey: .keepAdapting) ?? d.keepAdapting
+        fixWords = try c.decodeIfPresent(Bool.self, forKey: .fixWords) ?? d.fixWords
         holdToDelete = try c.decodeIfPresent(Bool.self, forKey: .holdToDelete) ?? d.holdToDelete
         comparisonRuns = try c.decodeIfPresent(Int.self, forKey: .comparisonRuns) ?? d.comparisonRuns
     }
@@ -72,8 +75,13 @@ public struct CalibrationProfile: Codable, Equatable, Sendable {
     /// Forget everything learned while typing and go back to the calibration model.
     public mutating func resetAdaptation() {
         adaptive = nil
+        model = calibrationModel
+    }
+
+    /// The model from the calibration taps alone, before anything learned while typing.
+    public var calibrationModel: TouchModel {
         let e = ModelFitter.evidence(from: samples, kind: model.pointKind, keyWidth: model.keyWidth)
-        model = ModelFitter.refit(model, means: e, spreads: e)
+        return ModelFitter.refit(model, means: e, spreads: e)
     }
 }
 

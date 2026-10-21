@@ -14,6 +14,8 @@ struct KeyboardRootView: View {
                 }
             case .menu:
                 MenuView(c: c)
+            case .learned:
+                LearnedView(c: c)
             case .calibrationDone:
                 CalibrationDoneView(c: c)
             case .comparisonIntro:
@@ -121,6 +123,9 @@ struct TypingBar: View {
             Group {
                 if s.pendingChoice != nil || s.pendingExtra != nil {
                     ChoiceStrip(c: c)
+                } else if let fix = s.lastWordFix {
+                    Label("Fixed “\(fix.typed)” → “\(fix.fixed)”. Undo keeps yours.", systemImage: "wand.and.stars")
+                        .font(.footnote).lineLimit(1).minimumScaleFactor(0.8)
                 } else if c.settings.showTouches {
                     DemoReadout(c: c)
                 } else if c.profile == nil && c.settings.adaptationOn {
@@ -247,6 +252,7 @@ struct MenuView: View {
                 Text("Learned from \(p.samples.count) calibration taps on \(p.createdAt.formatted(date: .abbreviated, time: .omitted))"
                      + ".")
                     .font(.footnote).foregroundStyle(.secondary)
+                NavigationLinkLike(title: "What it learned about my touch") { c.screen = .learned }
                 if !p.model.evaluation.isEmpty {
                     NavigationLinkLike(title: "What each part of the model adds") { c.screen = .calibrationDone }
                 }
@@ -276,6 +282,9 @@ struct MenuView: View {
             Toggle("Use common letter pairs as a small hint", isOn: $c.settings.useLetterPatterns)
             Toggle("Show my touches (explains each decision)", isOn: $c.settings.showTouches)
             Toggle("Hold backspace to keep deleting", isOn: $c.settings.holdToDelete)
+            Toggle("Fix misspelled words when I press space", isOn: $c.settings.fixWords)
+            Text("When you press space, it compares the word you typed with 20,000 common words, using how likely each of your taps was to mean each letter. It only changes the word if another one is much more likely. Undo puts your word back. Letters you picked in the two-choice bar are never changed.")
+                .font(.footnote).foregroundStyle(.secondary)
             Toggle("Keep adapting as I type", isOn: $c.settings.keepAdapting)
             Text("The keyboard keeps learning from letters you pick in the two-choice bar, letters you delete and retype nearby, and letters it was sure about that you kept. Older evidence slowly fades, so it follows how you type now. If you suddenly need to fix more letters than usual, it learns faster for a while. It stores only running totals per key — never your text or the order of letters.")
                 .font(.footnote).foregroundStyle(.secondary)
@@ -407,5 +416,72 @@ struct ComparisonDoneView: View {
             }
             Button("Done") { c.closeComparison() }.buttonStyle(.borderedProminent)
         }
+    }
+}
+
+/// Draws what the model learned: for each letter, where this person's taps for it really land (shaded oval,
+/// sized by how spread out they are), compared with right after calibration (dashed).
+struct LearnedView: View {
+    @ObservedObject var c: KeyboardController
+
+    var body: some View {
+        Panel(title: "What it learned about my touch") {
+            if let p = c.profile {
+                let now = p.model
+                let before = p.calibrationModel
+                let layout = KeyboardLayout.make(page: .letters, width: c.width, rowHeight: KeyboardController.baseRowHeight,
+                                                 showNextKeyboard: false)
+                Canvas { ctx, size in
+                    let s = size.width / layout.width
+                    ctx.scaleBy(x: s, y: s)
+                    for key in layout.keys where key.kind == .character && key.id.first?.isLetter == true {
+                        let f = key.frame
+                        let box = CGRect(x: f.x + 2, y: f.y + 3, width: f.w - 4, height: f.h - 6)
+                        ctx.stroke(Path(roundedRect: box, cornerRadius: 6), with: .color(.secondary.opacity(0.4)))
+                        ctx.draw(Text(key.label).font(.caption).foregroundColor(.secondary),
+                                 at: CGPoint(x: f.center.x, y: f.center.y))
+                        oval(ctx, key, before, fill: false)
+                        oval(ctx, key, now, fill: true)
+                        let aim = f.center + now.offset(for: key)
+                        var arrow = Path()
+                        arrow.move(to: CGPoint(x: f.center.x, y: f.center.y))
+                        arrow.addLine(to: CGPoint(x: aim.x, y: aim.y))
+                        ctx.stroke(arrow, with: .color(.accentColor), lineWidth: 1.5)
+                        ctx.fill(Path(ellipseIn: CGRect(x: aim.x - 2.5, y: aim.y - 2.5, width: 5, height: 5)), with: .color(.accentColor))
+                    }
+                }
+                .aspectRatio(layout.width / (layout.rowHeight * 3), contentMode: .fit)
+                .accessibilityLabel(summary(now))
+                Text(summary(now)).font(.callout)
+                Text("Each arrow goes from the middle of a key to where your taps for that letter usually land. The shaded oval shows how spread out they are: bigger means more spread. The dashed oval is what calibration measured; if they differ, the keyboard has adapted since.")
+                    .font(.footnote).foregroundStyle(.secondary)
+                if let a = p.adaptive, a.updates > 0 {
+                    Text("Updated from \(a.updates) letters you typed since calibration.").font(.footnote).foregroundStyle(.secondary)
+                }
+            }
+            Button("Back") { c.screen = .menu }.buttonStyle(.borderedProminent)
+        }
+    }
+
+    private func oval(_ ctx: GraphicsContext, _ key: Key, _ model: TouchModel, fill: Bool) {
+        let center = key.frame.center + model.offset(for: key)
+        let e = model.cov(for: key).ellipse
+        let shape = Path(ellipseIn: CGRect(x: -e.major, y: -e.minor, width: 2 * e.major, height: 2 * e.minor))
+            .applying(CGAffineTransform(rotationAngle: e.angle).concatenating(CGAffineTransform(translationX: center.x, y: center.y)))
+        if fill {
+            ctx.fill(shape, with: .color(.accentColor.opacity(0.2)))
+        } else {
+            ctx.stroke(shape, with: .color(.secondary), style: StrokeStyle(lineWidth: 1, dash: [3, 3]))
+        }
+    }
+
+    private func summary(_ m: TouchModel) -> String {
+        let o = m.globalOffset
+        func part(_ v: Double, _ pos: String, _ neg: String) -> String? {
+            abs(v) < 2 ? nil : "\(Int(abs(v).rounded())) points \(v > 0 ? pos : neg)"
+        }
+        let parts = [part(o.x, "to the right", "to the left"), part(o.y, "lower", "higher")].compactMap { $0 }
+        return parts.isEmpty ? "On average your taps land close to the middle of the key you mean."
+            : "Compared with the middle of the key you mean, your taps land on average \(parts.joined(separator: " and "))."
     }
 }

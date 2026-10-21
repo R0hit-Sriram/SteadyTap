@@ -8,7 +8,7 @@ let package = Package(
     platforms: [.iOS(.v16), .macOS(.v13)],
     products: [.library(name: "TouchEngine", targets: ["TouchEngine"])],
     targets: [
-        .target(name: "TouchEngine"),
+        .target(name: "TouchEngine", resources: [.copy("Resources/words.txt")]),
         .testTarget(name: "TouchEngineTests", dependencies: ["TouchEngine"]),
     ]
 )

@@ -466,6 +466,11 @@ enum Copy {
         ("4. Keeps adapting as you type", [
             "Calibration gives it a starting point. After that, it keeps learning from letters you pick when it offers two, letters you delete and retype nearby, and letters it was sure about that you kept.",
             "Older evidence fades, and if you suddenly need more fixes than usual, it learns faster. It keeps only running totals per key, never your text. You can turn this off in the keyboard’s settings.",
+            "To see it, open the keyboard’s settings and choose **What it learned about my touch**. Each key shows where your taps for it really land, now and right after calibration.",
+        ]),
+        ("5. Fixing whole words", [
+            "When you press space, the keyboard compares the word you typed with 20,000 common words. For each one it adds up how likely each of your taps was to mean that word’s letters, using your own touch pattern, and how common the word is.",
+            "It only changes the word if another one is much more likely, at least 80%. Undo puts your word back, and letters you picked in the two-choice bar are never changed. The word list is built into the keyboard; nothing is sent anywhere.",
         ]),
         ("Limitations", [
             "Big changes can still take a few dozen letters to catch up with; recalibrating is faster. It hasn’t been tested in a clinical study, and it may not help everyone.",

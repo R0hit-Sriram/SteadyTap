@@ -36,6 +36,7 @@ This plan **replaces** the earlier PWA plan. The product is now an iPhone app wi
 - [x] Engine + 39 unit tests (pass on Swift 5.10, Linux)
 - [x] Per-person "what each part adds" table (leave-one-out, shown after calibration)
 - [x] Online learning while typing (picks / corrections / confident taps, fading evidence, fix-rate change detection), 46 tests incl. drift simulations
+- [x] Whole-word fixing on space (noisy-channel decoder over 20k words using the person's own touch model), "What it learned" map, 56 tests
 - [x] Comparison: 3 phrases per mode, words per minute, median + range, "may be chance" note when ranges overlap, combined report across saved runs
 - [x] Hold-to-delete backspace (toggle)
 - [x] Keyboard extension:

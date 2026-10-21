@@ -84,6 +84,13 @@ Write down the iPhone model, iOS version, date and pass/fail for each item. Don'
   - "Go back to just my calibration" resets the counts.
   - With the toggle off, the counts don't change.
   - Counts survive force-quitting the host app (saved every 10 letters and when the keyboard closes).
+- [ ] **Fix misspelled words** (on by default):
+  - Type "tge" with the middle tap a little toward H, then space. It becomes "the ", and the bar says “Fixed "tge" → "the"”. Undo gives back "tge ".
+  - Carefully typed real words ("car", "form") and names stay as typed.
+  - Capital first letters are kept ("Tge" → "The").
+  - Typing feels as fast as before. If space lags, tell us.
+  - With the toggle off, nothing is changed.
+- [ ] ⚙︎ ▸ **What it learned about my touch** draws arrows and ovals on the letter keys, plus one sentence about the average offset. After using "Keep adapting" for a while, the shaded ovals move away from the dashed ones.
 
 **Settings**
 - [ ] Adaptation off: the touches overlay says "fixed keyboard".

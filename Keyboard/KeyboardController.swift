@@ -12,7 +12,7 @@ final class ProxyTarget: TextTarget {
 }
 
 enum Screen: Equatable {
-    case typing, menu, calibrating, calibrationDone, comparisonIntro, comparing, comparisonDone
+    case typing, menu, learned, calibrating, calibrationDone, comparisonIntro, comparing, comparisonDone
 }
 
 /// One touch kept on screen for the "show my touches" view. Memory only.
@@ -165,6 +165,7 @@ final class KeyboardController: ObservableObject {
     func applySettings() {
         session.model = settings.adaptationOn ? profile?.model : nil
         session.context = settings.useLetterPatterns ? .english : nil
+        session.words = settings.fixWords ? .english : nil
         session.askThreshold = settings.askLevel.threshold
         session.recordsDemoLine = settings.showTouches
         if !settings.showTouches { trail = [] }
