@@ -81,12 +81,13 @@ public struct KeyboardLayout: Sendable {
         }
 
         // Bottom row: [123/ABC] [🌐] [,] [space……] [.] [return]
-        var bottom: [(String, String, KeyKind, Double)] = [("page", page == .letters ? "123" : "ABC", .pageSwitch, 1.5)]
-        if showNextKeyboard { bottom.append(("globe", "🌐", .nextKeyboard, 1.25)) }
+        // Side keys are trimmed so space gets the room: 4 key widths with 🌐, 5 without.
+        var bottom: [(String, String, KeyKind, Double)] = [("page", page == .letters ? "123" : "ABC", .pageSwitch, 1.25)]
+        if showNextKeyboard { bottom.append(("globe", "🌐", .nextKeyboard, 1)) }
         if page == .letters { bottom.append((",", ",", .character, 1)) }
         bottom.append(("space", "space", .space, 0))
         if page == .letters { bottom.append((".", ".", .character, 1)) }
-        bottom.append(("return", "return", .returnKey, 2))
+        bottom.append(("return", "return", .returnKey, 1.75))
         let spaceUnits = 10 - bottom.reduce(0) { $0 + $1.3 }
         var x = 0.0
         for (id, label, kind, units) in bottom {

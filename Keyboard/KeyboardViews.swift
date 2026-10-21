@@ -281,6 +281,7 @@ struct MenuView: View {
             }
             Toggle("Use common letter pairs as a small hint", isOn: $c.settings.useLetterPatterns)
             Toggle("Show my touches (explains each decision)", isOn: $c.settings.showTouches)
+            Toggle("Capitalize the first letter of sentences", isOn: $c.settings.capitalizeSentences)
             Toggle("Hold backspace to keep deleting", isOn: $c.settings.holdToDelete)
             Toggle("Fix misspelled words when I press space", isOn: $c.settings.fixWords)
             Text("When you press space, it compares the word you typed with 20,000 common words, using how likely each of your taps was to mean each letter. It only changes the word if another one is much more likely. Undo puts your word back. Letters you picked in the two-choice bar are never changed.")

@@ -218,6 +218,34 @@ final class TypingSessionTests: XCTestCase {
         XCTAssertEqual(session.stats.backspaces, 1)
     }
 
+    func testTurningOffAutoCapitalStaysOff() {
+        let buffer = BufferTarget()
+        let session = TypingSession(target: buffer)
+        let a = layout390.key(id: "a")!.frame.center, shift = layout390.key(id: "shift")!.frame.center
+        XCTAssertEqual(session.shift, .once) // auto-capital at the start
+        session.handle(tapAt(shift, t: 0), layout: layout390)
+        XCTAssertEqual(session.shift, .off)
+        session.hostTextChanged() // the host app reports a change; must not bring it back
+        session.autoCapitalize = true
+        XCTAssertEqual(session.shift, .off)
+        session.handle(tapAt(a, t: 1), layout: layout390)
+        XCTAssertEqual(buffer.text, "a")
+        // Still capitalizes the next sentence.
+        buffer.insert(". ")
+        session.hostTextChanged()
+        XCTAssertEqual(session.shift, .once)
+        // Double-tap from an automatic capital still gives caps lock.
+        session.handle(tapAt(shift, t: 2), layout: layout390)
+        session.handle(tapAt(shift, t: 2.2), layout: layout390)
+        XCTAssertEqual(session.shift, .locked)
+    }
+
+    func testSpaceBarIsWider() {
+        let withGlobe = KeyboardLayout.make(page: .letters, width: 390, rowHeight: 50, showNextKeyboard: true)
+        XCTAssertEqual(withGlobe.key(id: "space")!.frame.w / withGlobe.keyWidth, 4, accuracy: 0.001)
+        XCTAssertEqual(layout390.key(id: "return")!.frame.x + layout390.key(id: "return")!.frame.w, 390, accuracy: 0.001)
+    }
+
     func testDemoLineShowsFixedVersusAdapted() {
         // SYNTHETIC user 30pt low: a fixed keyboard reads the row below.
         var user = SyntheticUser(downOffset: Vec2(0, 30), sigma: 3)

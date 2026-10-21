@@ -27,6 +27,8 @@ public struct KeyboardSettings: Codable, Equatable, Sendable {
     /// When space is pressed, replace a misspelled word if a common word fits the taps much better.
     public var fixWords = true
     public var holdToDelete = true
+    /// Start each sentence with a capital letter (still only where the app's text field asks for it).
+    public var capitalizeSentences = true
     public var comparisonRuns = 0
     public init() {}
 
@@ -42,6 +44,7 @@ public struct KeyboardSettings: Codable, Equatable, Sendable {
         keepAdapting = try c.decodeIfPresent(Bool.self, forKey: .keepAdapting) ?? d.keepAdapting
         fixWords = try c.decodeIfPresent(Bool.self, forKey: .fixWords) ?? d.fixWords
         holdToDelete = try c.decodeIfPresent(Bool.self, forKey: .holdToDelete) ?? d.holdToDelete
+        capitalizeSentences = try c.decodeIfPresent(Bool.self, forKey: .capitalizeSentences) ?? d.capitalizeSentences
         comparisonRuns = try c.decodeIfPresent(Int.self, forKey: .comparisonRuns) ?? d.comparisonRuns
     }
 }

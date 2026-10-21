@@ -168,11 +168,16 @@ final class KeyboardController: ObservableObject {
         session.words = settings.fixWords ? .english : nil
         session.askThreshold = settings.askLevel.threshold
         session.recordsDemoLine = settings.showTouches
+        session.autoCapitalize = hostAutoCapitalizes && settings.capitalizeSentences
         if !settings.showTouches { trail = [] }
     }
 
+    /// Whether the text field we're typing into wants sentence capitals.
+    private var hostAutoCapitalizes = true
+
     func hostTextChanged(autoCapitalize: Bool) {
-        session.autoCapitalize = autoCapitalize
+        hostAutoCapitalizes = autoCapitalize
+        session.autoCapitalize = autoCapitalize && settings.capitalizeSentences
         session.hostTextChanged()
         revision += 1
     }

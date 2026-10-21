@@ -76,7 +76,10 @@ public final class TypingSession {
     public var words: WordList?
     public var askThreshold = 0.7
     public var autoCapitalize = true {
-        didSet { if autoCapitalize { refreshAutoShift() } else if shift == .once { shift = .off } }
+        didSet {
+            guard autoCapitalize != oldValue else { return }
+            if autoCapitalize { refreshAutoShift() } else if autoShifted { shift = .off }
+        }
     }
 
     /// Reports touches whose intended key became known while typing (see LabelKind), for online learning.
@@ -105,7 +108,13 @@ public final class TypingSession {
     /// for the deleted touch. Stops "cat → car" (a changed word, not a misread) from teaching anything.
     public static let plausibleAlternative = 0.02
 
-    public var shift: ShiftState = .off
+    public var shift: ShiftState = .off { didSet { autoShifted = false } }
+    /// True while `shift` is an automatic sentence capital rather than one the person turned on.
+    private var autoShifted = false
+    /// Text before the cursor when the person turned an automatic capital off. It isn't turned back on
+    /// there, even when the host app reports a change; typing anything moves past it.
+    private var autoShiftDismissedAt: String?
+    private var lastTapDismissedAuto = false
     public var page: KeyboardPage = .letters
     public private(set) var pendingChoice: PendingChoice?
     /// A tap we think was an accidental extra contact; shown with a "keep it" button, not typed.
@@ -178,11 +187,15 @@ public final class TypingSession {
             undo = .inserted("\n")
         case .shift:
             let t = gesture.up.t
+            let wasAuto = autoShifted, quick = t - lastShiftTap < 0.4
             switch shift {
-            case .off: shift = .once
-            case .once: shift = t - lastShiftTap < 0.4 ? .locked : .off
+            // A quick second tap after turning an automatic capital off is a double-tap: caps lock, as on iOS.
+            case .off: shift = quick && lastTapDismissedAuto ? .locked : .once
+            case .once: shift = quick ? .locked : .off
             case .locked: shift = .off
             }
+            lastTapDismissedAuto = wasAuto && shift == .off
+            if lastTapDismissedAuto { autoShiftDismissedAt = target?.textBeforeCursor ?? "" }
             lastShiftTap = t
         case .pageSwitch:
             page = page == .letters ? .symbols : .letters
@@ -391,7 +404,11 @@ public final class TypingSession {
     func refreshAutoShift() {
         guard autoCapitalize, shift == .off, page == .letters else { return }
         let before = target?.textBeforeCursor ?? ""
-        if before.isEmpty || [". ", "? ", "! ", "\n"].contains(where: before.hasSuffix) { shift = .once }
+        guard before != autoShiftDismissedAt else { return }
+        if before.isEmpty || [". ", "? ", "! ", "\n"].contains(where: before.hasSuffix) {
+            shift = .once
+            autoShifted = true
+        }
     }
 
     private func cased(_ s: String) -> String { shift == .off ? s : s.uppercased() }
