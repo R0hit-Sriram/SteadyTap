@@ -120,14 +120,28 @@ struct TypingBar: View {
 
     var body: some View {
         let s = c.session
+        // While a word is being typed (or was just autocorrected) the bar is Apple's: three word slots.
+        let showsWords = s.pendingChoice == nil && s.pendingExtra == nil && !c.settings.showTouches
+            && (s.lastWordFix != nil || !s.suggestions.typed.isEmpty)
         HStack(spacing: 4) {
-            BarButton(title: "Settings", systemImage: "gearshape") { c.screen = .menu }
-            Group {
+            if showsWords {
+                SuggestionBar(c: c).frame(maxWidth: .infinity)
+            } else {
+                BarButton(title: "Settings", systemImage: "gearshape") { c.screen = .menu }
+                status.frame(maxWidth: .infinity)
+                BarButton(title: "Emoji", systemImage: "face.smiling") { c.screen = .emoji }
+            }
+            BarButton(title: "Undo", systemImage: "arrow.uturn.backward") { c.undo() }
+                .disabled(!s.canUndo)
+        }
+        .padding(.horizontal, 4)
+    }
+
+    @ViewBuilder private var status: some View {
+        let s = c.session
+        Group {
                 if s.pendingChoice != nil || s.pendingExtra != nil {
                     ChoiceStrip(c: c)
-                } else if let fix = s.lastWordFix {
-                    Label("Fixed “\(fix.typed)” → “\(fix.fixed)”. Undo keeps yours.", systemImage: "wand.and.stars")
-                        .font(.footnote).lineLimit(1).minimumScaleFactor(0.8)
                 } else if c.settings.showTouches {
                     DemoReadout(c: c)
                 } else if c.profile == nil && c.settings.adaptationOn {
@@ -138,13 +152,62 @@ struct TypingBar: View {
                 } else {
                     Spacer()
                 }
-            }
-            .frame(maxWidth: .infinity)
-            BarButton(title: "Emoji", systemImage: "face.smiling") { c.screen = .emoji }
-            BarButton(title: "Undo", systemImage: "arrow.uturn.backward") { c.undo() }
-                .disabled(!s.canUndo)
         }
-        .padding(.horizontal, 4)
+    }
+}
+
+/// Apple-style suggestion bar: “what you typed” | the word space will put in (highlighted) | the next best word.
+/// Right after an autocorrect it offers the typed word back instead.
+struct SuggestionBar: View {
+    @ObservedObject var c: KeyboardController
+
+    var body: some View {
+        let s = c.session
+        if let fix = s.lastWordFix {
+            Button { c.revertWordFix() } label: {
+                Label("Change back to “\(fix.typed)”", systemImage: "arrow.uturn.backward")
+                    .font(.body).lineLimit(1).minimumScaleFactor(0.7)
+                    .frame(maxWidth: .infinity, minHeight: 44)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityHint("Undoes the autocorrection")
+        } else {
+            let w = s.suggestions
+            let middle = w.autocorrect ?? w.others.first
+            let right = w.autocorrect == nil ? w.others.dropFirst().first : w.others.first
+            HStack(spacing: 0) {
+                slot("“\(w.typed)”", word: w.typed, hint: "Keeps what you typed")
+                divider
+                slot(middle, word: middle, highlighted: w.autocorrect != nil,
+                     hint: w.autocorrect != nil ? "Space will type this" : nil)
+                divider
+                slot(right, word: right)
+            }
+        }
+    }
+
+    private var divider: some View {
+        Rectangle().fill(Color(.separator)).frame(width: 1, height: 24)
+    }
+
+    @ViewBuilder
+    private func slot(_ title: String?, word: String?, highlighted: Bool = false, hint: String? = nil) -> some View {
+        if let title, let word {
+            Button { c.acceptSuggestion(word) } label: {
+                Text(title)
+                    .font(highlighted ? .body.weight(.semibold) : .body)
+                    .lineLimit(1).minimumScaleFactor(0.6)
+                    .padding(.horizontal, 6)
+                    .frame(maxWidth: .infinity, minHeight: 44)
+                    .background(highlighted ? Color(.systemGray5) : .clear, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityHint(hint ?? "")
+        } else {
+            Color.clear.frame(maxWidth: .infinity, minHeight: 44)
+        }
     }
 }
 
@@ -286,8 +349,8 @@ struct MenuView: View {
             Toggle("Show my touches (explains each decision)", isOn: $c.settings.showTouches)
             Toggle("Capitalize the first letter of sentences", isOn: $c.settings.capitalizeSentences)
             Toggle("Hold backspace to keep deleting", isOn: $c.settings.holdToDelete)
-            Toggle("Fix misspelled words when I press space", isOn: $c.settings.fixWords)
-            Text("When you press space, it compares the word you typed with 40,000 common words, using how likely each of your taps was to mean each letter. It can also fix a letter tapped twice, a missed letter, or two swapped letters. It only changes the word if another one is much more likely. Undo puts your word back. Letters you picked in the two-choice bar are never changed.")
+            Toggle("Auto-Correction", isOn: $c.settings.fixWords)
+            Text("Word suggestions show above the keys while you type. With Auto-Correction on, space (or . , ? !) puts in the highlighted word. When you press space, it compares the word you typed with 40,000 common words, using how likely each of your taps was to mean each letter. It can also fix a letter tapped twice, a missed letter, or two swapped letters. It only changes the word if another one is much more likely. Undo puts your word back. Letters you picked in the two-choice bar are never changed.")
                 .font(.footnote).foregroundStyle(.secondary)
             Toggle("Keep adapting as I type", isOn: $c.settings.keepAdapting)
             Text("The keyboard keeps learning from letters you pick in the two-choice bar, letters you delete and retype nearby, and letters it was sure about that you kept. Older evidence slowly fades, so it follows how you type now. If you suddenly need to fix more letters than usual, it learns faster for a while. It stores only running totals per key — never your text or the order of letters.")

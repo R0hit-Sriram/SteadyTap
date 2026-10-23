@@ -167,14 +167,15 @@ final class KeyboardController: ObservableObject {
     func applySettings() {
         session.model = settings.adaptationOn ? profile?.model : nil
         session.context = settings.useLetterPatterns ? .english : nil
-        if settings.fixWords {
+        // Suggestions always show; Auto-Correction only decides whether space changes the word.
+        session.autocorrects = settings.fixWords
+        if session.words == nil {
             // Reading 40,000 words takes a moment: do it off the main thread so the keyboard opens instantly.
             Task { [weak self] in
                 let words = await Task.detached(priority: .userInitiated) { WordList.english }.value
-                if self?.settings.fixWords == true { self?.session.words = words }
+                self?.session.words = words
+                self?.revision += 1
             }
-        } else {
-            session.words = nil
         }
         session.askThreshold = settings.askLevel.threshold
         session.recordsDemoLine = settings.showTouches
@@ -234,6 +235,8 @@ final class KeyboardController: ObservableObject {
     func chooseAlternative() { activeSession.chooseAlternative(); revision += 1 }
     func acceptChoice() { activeSession.acceptChoice(); revision += 1 }
     func keepExtra() { activeSession.keepExtra(); revision += 1 }
+    func acceptSuggestion(_ word: String) { session.acceptSuggestion(word); revision += 1 }
+    func revertWordFix() { session.revertWordFix(); revision += 1 }
     func undo() { activeSession.undoLast(); revision += 1 }
     func insertEmoji(_ emoji: String) { session.insertText(emoji); revision += 1 }
 

@@ -152,6 +152,13 @@ public enum WordFixer {
 
     /// The fix for `typed` (lowercase a–z, one evidence row per letter), or nil to leave it alone.
     public static func fix(typed: String, evidence: [[Double]], words: WordList) -> Fix? {
+        guard let scores = fixScores(typed: typed, evidence: evidence, words: words) else { return nil }
+        return bestFix(typed: typed, scores)
+    }
+
+    /// The typed letters and every listed word of about the same length (one fewer, same, one more) that
+    /// scores within `ignoreBelow` of the best. nil if `typed` can't be fixed (too short/long, not a–z).
+    static func fixScores(typed: String, evidence: [[Double]], words: WordList) -> [(word: String, score: Double)]? {
         guard typed.count == evidence.count, (2 ... maxLength).contains(typed.count),
               typed.allSatisfy({ LetterContext.index(of: $0) < 26 }) else { return nil }
         let entries = (typed.count - 1 ... typed.count + 1).filter { $0 >= 2 }.flatMap { words.byLength[$0] ?? [] }
@@ -168,9 +175,55 @@ public enum WordFixer {
             scores.append((e.word, score))
             best = max(best, score)
         }
+        return scores
+    }
+
+    private static func bestFix(typed: String, _ scores: [(word: String, score: Double)]) -> Fix? {
         guard let top = scores.max(by: { $0.score < $1.score }), top.word != typed else { return nil }
         let total = scores.reduce(0) { $0 + exp($1.score - top.score) }
         let p = 1 / total
         return p >= fixThreshold ? Fix(word: top.word, probability: p) : nil
+    }
+
+    /// What the suggestion bar shows for the word being typed.
+    public struct Suggestions: Equatable, Sendable {
+        /// The letters as typed (the bar shows them in quotes; tapping keeps them).
+        public var typed: String
+        /// The word space will put in instead, or nil to leave the typed word alone.
+        public var autocorrect: String?
+        /// Other likely words, best first: never `typed` or `autocorrect`.
+        public var others: [String]
+        public static let none = Suggestions(typed: "", autocorrect: nil, others: [])
+    }
+
+    /// Suggestions for a word in progress: fixes of about the same length (as in `fix`) plus completions,
+    /// longer words whose first letters fit the taps so far. A completion is scored on those taps only:
+    ///   score = Σ log P(letter i | tap i) + log P(word)
+    /// which is the same quantity a fix is scored by, so the two kinds can be ranked together.
+    public static func suggest(typed: String, evidence: [[Double]], words: WordList,
+                               autocorrect: Bool = true, limit: Int = 2) -> Suggestions {
+        let n = typed.count
+        guard n == evidence.count, (1 ... maxLength).contains(n),
+              typed.allSatisfy({ LetterContext.index(of: $0) < 26 }) else { return .none }
+        var scores = fixScores(typed: typed, evidence: evidence, words: words) ?? []
+        let fix = autocorrect ? bestFix(typed: typed, scores) : nil
+
+        let e = Taps(evidence).evidence
+        var best = scores.map(\.score).max() ?? -.infinity
+        for length in n + 1 ... maxLength {
+            for w in words.byLength[length] ?? [] {
+                var s = w.logPrior
+                for i in 0 ..< n {
+                    s += e[i * 26 + w.letters[i]]
+                    if s < best - ignoreBelow { break } // every letter only lowers it
+                }
+                guard s > best - ignoreBelow else { continue }
+                scores.append((w.word, s))
+                best = max(best, s)
+            }
+        }
+        let others = scores.sorted { $0.score > $1.score }.map(\.word)
+            .filter { $0 != typed && $0 != fix?.word }
+        return Suggestions(typed: typed, autocorrect: fix?.word, others: Array(others.prefix(limit)))
     }
 }

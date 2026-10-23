@@ -120,12 +120,13 @@ final class WordFixTests: XCTestCase {
         XCTAssertEqual(buffer.text, "tge ", "the person said g on purpose")
     }
 
-    func testNoFixingWithoutAnAdaptedModel() {
+    func testFixesWithoutCalibrationToo() {
+        // No adapted model: taps are read like a fixed keyboard would, and the word is still fixed.
         let (session, buffer) = wordSession()
         defer { withExtendedLifetime(buffer) {} }
         session.model = nil
         type("tge ", session, nudge: [1: Vec2(12, 0)])
-        XCTAssertEqual(buffer.text, "tge ")
+        XCTAssertEqual(buffer.text, "the ")
     }
 
     func testFixingWholeWordsHelpsANoisyTypist() {

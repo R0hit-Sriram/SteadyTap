@@ -72,8 +72,14 @@ public final class TypingSession {
     /// nil = fixed keyboard.
     public var model: TouchModel?
     public var context: LetterContext?
-    /// nil = don't fix whole words. Only used with an adapted model (it needs per-letter probabilities).
+    /// Words for the suggestion bar and autocorrect; nil = neither. Without calibration, taps are read
+    /// with an untrained model (a fixed keyboard's idea of each tap), so this works before calibrating too.
     public var words: WordList?
+    /// Apply the bar's autocorrect word when space or . , ? ! is typed. Off: suggestions only.
+    public var autocorrects = true
+    /// Words the person chose to keep as typed (tapped them in the bar, or reverted a fix). MEMORY ONLY:
+    /// forgotten when the keyboard closes, so typed text is never stored.
+    private var keptWords: Set<String> = []
     public var askThreshold = 0.7
     public var autoCapitalize = true {
         didSet {
@@ -100,7 +106,9 @@ public final class TypingSession {
     private var deletedTouch: RecentTouch?
     /// The word being typed: each letter and how likely each a–z was for its tap. MEMORY ONLY; cleared at
     /// the next space or non-letter key.
-    private var word: [(output: String, evidence: [Double])] = []
+    private var word: [(output: String, evidence: [Double])] = [] { didSet { wordVersion += 1 } }
+    private var wordVersion = 0
+    private var cachedSuggestions: (key: String, value: WordFixer.Suggestions)?
     public static let recentLimit = 3
     public static let confidentThreshold = 0.9
     public static let correctionWindow = 5.0
@@ -160,11 +168,11 @@ public final class TypingSession {
 
         switch key.kind {
         case .character, .space:
-            if key.kind == .space { fixWord() }
+            if key.kind == .space || Self.wordEnders.contains(key.id) { fixWord() }
             let text = cased(key.output ?? "")
             target?.insert(text)
             undo = lastWordFix.map { .replaced(old: $0.typed + text, new: $0.fixed + text) } ?? .inserted(text)
-            trackWord(key: key, output: text, decision: decision)
+            trackWord(key: key, output: text, decision: decision, layout: layout)
             if decision.adaptationChangedIt { stats.adaptationChanges += 1 }
             if model != nil, !decision.candidates.isEmpty {
                 noteTyped(keyID: key.id, output: text, decision: decision, time: gesture.up.t)
@@ -254,27 +262,77 @@ public final class TypingSession {
 
     // MARK: Fixing whole words
 
-    private func trackWord(key: Key, output: String, decision: Decision) {
+    /// Punctuation that ends a word, so it applies the autocorrect like space does.
+    static let wordEnders: Set<String> = [".", ",", "?", "!"]
+
+    private func trackWord(key: Key, output: String, decision: Decision, layout: KeyboardLayout) {
         let isLetter = key.kind == .character && LetterContext.index(of: key.id.first ?? " ") < 26
-        guard isLetter, model != nil, let evidence = WordFixer.letterEvidence(decision.candidates, scale: model?.confidenceScale ?? 1) else {
+        // Not calibrated (or adapting is off): read the tap with an untrained model, so words still get fixed.
+        let candidates = model == nil
+            ? Decoder.score(point: decision.point, layout: layout, model: .untrained(keyWidth: layout.keyWidth))
+            : decision.candidates
+        guard isLetter, let evidence = WordFixer.letterEvidence(candidates, scale: model?.confidenceScale ?? 1) else {
             word = []
             return
         }
         word.append((output, evidence))
     }
 
-    /// Called just before a space is typed: replace the word if a listed word is clearly more likely.
-    private func fixWord() {
-        defer { word = [] }
-        guard let words, model != nil, let target, let before = target.textBeforeCursor else { return }
+    /// The suggestion bar for the word being typed (cached until the word or the text changes).
+    public var suggestions: WordFixer.Suggestions {
+        let before = target?.textBeforeCursor ?? ""
+        let key = "\(wordVersion)|\(autocorrects)|\(before.suffix(32))"
+        if let cachedSuggestions, cachedSuggestions.key == key { return cachedSuggestions.value }
+        let value = computeSuggestions(before: before)
+        cachedSuggestions = (key, value)
+        return value
+    }
+
+    private func computeSuggestions(before: String) -> WordFixer.Suggestions {
+        guard let words, page == .letters else { return .none }
         let typed = word.map(\.output).joined()
         // The text must still end with exactly the letters we typed (the cursor didn't move).
-        guard !typed.isEmpty, before.hasSuffix(typed), before.dropLast(typed.count).last?.isLetter != true else { return }
+        guard !typed.isEmpty, before.hasSuffix(typed), before.dropLast(typed.count).last?.isLetter != true else { return .none }
         let lower = typed.lowercased()
         let capitalized = typed != lower
-        guard !capitalized || typed == lower.prefix(1).uppercased() + lower.dropFirst() else { return } // ALL CAPS etc.
-        guard let fix = WordFixer.fix(typed: lower, evidence: word.map(\.evidence), words: words) else { return }
-        let fixed = capitalized ? fix.word.prefix(1).uppercased() + fix.word.dropFirst() : fix.word
+        guard !capitalized || typed == lower.prefix(1).uppercased() + lower.dropFirst() else { return .none } // ALL CAPS etc.
+        let raw = WordFixer.suggest(typed: lower, evidence: word.map(\.evidence), words: words,
+                                    autocorrect: autocorrects && !keptWords.contains(lower))
+        func cased(_ w: String) -> String { capitalized ? w.prefix(1).uppercased() + w.dropFirst() : w }
+        return WordFixer.Suggestions(typed: typed, autocorrect: raw.autocorrect.map(cased), others: raw.others.map(cased))
+    }
+
+    /// The person tapped a word in the suggestion bar: it replaces the word being typed, then a space.
+    /// Tapping the typed word itself (shown in quotes) keeps it, and it won't be autocorrected again this session.
+    public func acceptSuggestion(_ chosen: String) {
+        let typed = word.map(\.output).joined()
+        guard let target, !typed.isEmpty, target.textBeforeCursor?.hasSuffix(typed) == true else { return }
+        pendingChoice = nil
+        pendingExtra = nil
+        lastWordFix = nil
+        if chosen == typed { keptWords.insert(typed.lowercased()) }
+        for _ in typed { target.deleteBackward() }
+        target.insert(chosen + " ")
+        undo = .replaced(old: typed, new: chosen + " ")
+        forgetRecent() // the touches no longer line up with the text
+        refreshAutoShift()
+    }
+
+    /// Put the typed word back after an autocorrect (the bar offers this right after a fix), and don't
+    /// autocorrect it again this session.
+    public func revertWordFix() {
+        guard let fix = lastWordFix else { return }
+        keptWords.insert(fix.typed.lowercased())
+        undoLast()
+        stats.wordFixes -= 1
+    }
+
+    /// Called just before a space or . , ? ! is typed: put in the bar's autocorrect word, if there is one.
+    private func fixWord() {
+        defer { word = [] }
+        guard let target, let before = target.textBeforeCursor else { return }
+        let typed = word.map(\.output).joined()
+        guard let fixed = suggestions.autocorrect else { return }
 
         for _ in typed { target.deleteBackward() }
         target.insert(fixed)
@@ -400,6 +458,7 @@ public final class TypingSession {
     public func undoLast() {
         guard let action = undo, let target else { return }
         undo = nil
+        lastWordFix = nil
         pendingChoice = nil
         pendingExtra = nil
         forgetRecent() // undo rewrites text in ways we can't attribute to touches
