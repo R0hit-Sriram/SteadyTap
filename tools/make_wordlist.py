@@ -8,7 +8,7 @@ Usage: python tools/make_wordlist.py path/to/en_50k.txt
 import re
 import sys
 
-KEEP = 20000
+KEEP = 40000
 # Never offer these as a "fix". Prefix match, so "fuck" also covers "fucking".
 BLOCKED_PREFIXES = ("fuck", "shit", "bitch", "cunt", "nigg", "fag", "retard", "whore", "slut", "motherf",
                     "dick", "cock", "pussy", "asshole", "bastard", "twat", "wank", "piss", "jackass",

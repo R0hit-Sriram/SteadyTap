@@ -284,7 +284,7 @@ struct MenuView: View {
             Toggle("Capitalize the first letter of sentences", isOn: $c.settings.capitalizeSentences)
             Toggle("Hold backspace to keep deleting", isOn: $c.settings.holdToDelete)
             Toggle("Fix misspelled words when I press space", isOn: $c.settings.fixWords)
-            Text("When you press space, it compares the word you typed with 20,000 common words, using how likely each of your taps was to mean each letter. It only changes the word if another one is much more likely. Undo puts your word back. Letters you picked in the two-choice bar are never changed.")
+            Text("When you press space, it compares the word you typed with 40,000 common words, using how likely each of your taps was to mean each letter. It can also fix a letter tapped twice, a missed letter, or two swapped letters. It only changes the word if another one is much more likely. Undo puts your word back. Letters you picked in the two-choice bar are never changed.")
                 .font(.footnote).foregroundStyle(.secondary)
             Toggle("Keep adapting as I type", isOn: $c.settings.keepAdapting)
             Text("The keyboard keeps learning from letters you pick in the two-choice bar, letters you delete and retype nearby, and letters it was sure about that you kept. Older evidence slowly fades, so it follows how you type now. If you suddenly need to fix more letters than usual, it learns faster for a while. It stores only running totals per key — never your text or the order of letters.")

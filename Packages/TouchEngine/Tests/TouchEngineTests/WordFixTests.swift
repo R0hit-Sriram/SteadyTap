@@ -22,7 +22,7 @@ func type(_ text: String, _ session: TypingSession, nudge: [Int: Vec2] = [:]) {
 }
 
 /// SYNTHETIC: a noisy typist types `text` once, with no corrections. Share of words that came out right.
-func wordAccuracy(_ text: String, fixWords: Bool, sigma: Double) -> Double {
+func wordAccuracy(_ text: String, fixWords: Bool, sigma: Double, slips: Bool = false) -> Double {
     var user = SyntheticUser(sigma: sigma)
     let samples = user.calibrate(CalibrationSession.standardSets(layout: layout390).flatMap { $0 }, layout: layout390)
     var typist = SyntheticUser(sigma: sigma, rng: SplitMix64(seed: 3))
@@ -31,7 +31,14 @@ func wordAccuracy(_ text: String, fixWords: Bool, sigma: Double) -> Double {
     session.autoCapitalize = false
     session.model = ModelFitter.fit(samples, layout: layout390)
     session.words = fixWords ? .english : nil
-    for c in text { session.handle(typist.tap(c == " " ? "space" : String(c), on: layout390), layout: layout390) }
+    var n = 0
+    for c in text {
+        n += 1
+        let key = c == " " ? "space" : String(c)
+        if slips, c != " ", n % 23 == 0 { continue } // a missed letter
+        session.handle(typist.tap(key, on: layout390), layout: layout390)
+        if slips, c != " ", n % 29 == 0 { session.handle(typist.tap(key, on: layout390), layout: layout390) } // a double tap
+    }
     let got = buffer.text.split(separator: " "), want = text.split(separator: " ")
     // Words right, aligned by longest common subsequence (a misread space mustn't shift every later word).
     var lcs = Array(repeating: Array(repeating: 0, count: want.count + 1), count: got.count + 1)
@@ -52,7 +59,7 @@ it was really nice to see you again let me know if you need anything else from t
 final class WordFixTests: XCTestCase {
     func testWordListLoadsFromTheBundle() {
         let words = WordList.english
-        XCTAssertGreaterThan(words.count, 15000)
+        XCTAssertGreaterThan(words.count, 35000)
         XCTAssertTrue(words.contains("the"))
         XCTAssertTrue(words.contains("thank"))
         XCTAssertFalse(words.contains("retarded"), "blocked words are never offered as a fix")
@@ -152,6 +159,39 @@ final class WordFixTests: XCTestCase {
         session.askThreshold = 0.7
         type("home ", session) // must not crash
         XCTAssertTrue(buffer.text.hasSuffix("home "))
+    }
+
+    func testMissedExtraAndSwappedLettersAreFixed() {
+        for (typed, want) in [("becuse ", "because "), ("plese ", "please "), ("thhe ", "the "), ("helllo ", "hello "), ("teh ", "the ")] {
+            let (session, buffer) = wordSession()
+            type(typed, session)
+            XCTAssertEqual(buffer.text, want, typed)
+        }
+    }
+
+    func testCarefullyTypedRealWordsAndNamesStay() {
+        for typed in ["car ", "form ", "care ", "hat ", "ten ", "bat ", "win ", "an ", "rohit ", "priya ", "zorp "] {
+            let (session, buffer) = wordSession()
+            type(typed, session)
+            XCTAssertEqual(buffer.text, typed)
+        }
+    }
+
+    func testWordFixingHelpsWithMissedAndDoubledLetters() {
+        // SYNTHETIC typist, not a person: also drops some letters and taps some twice.
+        let off = wordAccuracy(everydayText, fixWords: false, sigma: 6, slips: true)
+        let on = wordAccuracy(everydayText, fixWords: true, sigma: 6, slips: true)
+        print("SYNTHETIC word accuracy with slips, sigma 6: letters only \(off), with word fixing \(on)")
+        XCTAssertGreaterThan(on, off + 0.05)
+    }
+
+    func testConfidenceScaleIsFittedAndNeverAboveOne() {
+        var user = SyntheticUser(sigma: 10)
+        let samples = user.calibrate(CalibrationSession.standardSets(layout: layout390).flatMap { $0 }, layout: layout390)
+        let model = ModelFitter.fit(samples, layout: layout390)
+        let s = try! XCTUnwrap(model.confidenceScale)
+        print("SYNTHETIC confidence scale, sigma 10: \(s)")
+        XCTAssert((0.1 ... 1).contains(s))
     }
 
     func testOldSettingsTurnWordFixingOn() throws {

@@ -469,7 +469,7 @@ enum Copy {
             "To see it, open the keyboard’s settings and choose **What it learned about my touch**. Each key shows where your taps for it really land, now and right after calibration.",
         ]),
         ("5. Fixing whole words", [
-            "When you press space, the keyboard compares the word you typed with 20,000 common words. For each one it adds up how likely each of your taps was to mean that word’s letters, using your own touch pattern, and how common the word is.",
+            "When you press space, the keyboard compares the word you typed with 40,000 common words. For each one it adds up how likely each of your taps was to mean that word’s letters, using your own touch pattern, and how common the word is. It also allows for a letter tapped twice, a missed letter, or two letters swapped.",
             "It only changes the word if another one is much more likely, at least 80%. Undo puts your word back, and letters you picked in the two-choice bar are never changed. The word list is built into the keyboard; nothing is sent anywhere.",
         ]),
         ("Limitations", [

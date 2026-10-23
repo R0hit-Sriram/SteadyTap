@@ -18,6 +18,9 @@ public struct TouchModel: Codable, Equatable, Sendable {
     public var fixedAccuracy: Double
     /// What each layer of the model adds, on this person's calibration taps.
     public var evaluation: [EvaluationRow]
+    /// How much to trust the model's own "how sure" (1 = as is, below 1 = it was too sure on this person's
+    /// calibration taps). Used when fixing whole words. nil (older profiles) means 1.
+    public var confidenceScale: Double?
 
     /// No calibration: zero offset and a round spread a bit narrower than a key.
     /// This behaves almost exactly like a fixed keyboard.

@@ -246,7 +246,7 @@ public final class TypingSession {
 
     private func trackWord(key: Key, output: String, decision: Decision) {
         let isLetter = key.kind == .character && LetterContext.index(of: key.id.first ?? " ") < 26
-        guard isLetter, model != nil, let evidence = WordFixer.letterEvidence(decision.candidates) else {
+        guard isLetter, model != nil, let evidence = WordFixer.letterEvidence(decision.candidates, scale: model?.confidenceScale ?? 1) else {
             word = []
             return
         }
@@ -273,6 +273,10 @@ public final class TypingSession {
         if recordsDemoLine { demoAdapted = String((demoAdapted.dropLast(typed.count) + fixed).suffix(40)) }
         // Keep the recent-letter buffer matching the text. A word fix is a guess, not a label: don't learn from it.
         let letters = fixed.map(String.init)
+        if fixed.count != typed.count { // letters were added or dropped: the touches no longer line up with the text
+            recent = recent.map { var r = $0; r.labeled = true; return r }
+            return
+        }
         for j in 0 ..< min(recent.count, letters.count) {
             let i = recent.count - 1 - j, out = letters[letters.count - 1 - j]
             if recent[i].output != out {

@@ -112,7 +112,30 @@ public enum ModelFitter {
         model.fixedAccuracy = fixedAccuracy(samples, layout: layout)
         model.evaluation = evaluate(samples, layout: layout, bestKind: bestKind, accuracies: accuracies)
         model.repeatFilter = repeatFilter
+        model.confidenceScale = confidenceScale(samples, kind: bestKind, layout: layout)
         return model
+    }
+
+    /// Checks the model's "how sure" against how often it was right, on this person's calibration taps
+    /// (each tap scored by a model that never saw it). Picks the scale s ≤ 1 for the touch scores that
+    /// makes the true keys most likely: if the model said 95% but was right 80% of the time, s turns it down.
+    /// Never above 1, so it can only make word fixing more careful.
+    public static func confidenceScale(_ samples: [CalibrationSample], kind: PointKind, layout: KeyboardLayout) -> Double {
+        guard samples.count >= 10 else { return 1 }
+        let held: [(scores: [Double], truth: Int)] = samples.indices.compactMap { i in
+            var rest = samples
+            rest.remove(at: i)
+            let model = fitParameters(rest, kind: kind, keyWidth: layout.keyWidth)
+            let c = Decoder.score(point: samples[i].gesture.point(kind), layout: layout, model: model)
+            return c.firstIndex { $0.keyID == samples[i].keyID }.map { (c.map(\.touchScore), $0) }
+        }
+        func logLikelihood(_ s: Double) -> Double {
+            held.reduce(0) { total, h in
+                let top = h.scores.max()!
+                return total + s * (h.scores[h.truth] - top) - log(h.scores.reduce(0) { $0 + exp(s * ($1 - top)) })
+            }
+        }
+        return stride(from: 0.1, through: 1.0, by: 0.05).max { logLikelihood($0) < logLikelihood($1) } ?? 1
     }
 
     /// Keep a model's point type, evaluation and repeat filter, but replace its learned parameters.
@@ -122,6 +145,7 @@ public enum ModelFitter {
         model.fixedAccuracy = previous.fixedAccuracy
         model.evaluation = previous.evaluation
         model.repeatFilter = previous.repeatFilter
+        model.confidenceScale = previous.confidenceScale
         return model
     }
 

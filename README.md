@@ -84,15 +84,17 @@ Full steps and the device checklist are in [docs/MAC_AND_IPHONE.md](docs/MAC_AND
       These are simulations, not people.
 11. **Fixes whole words when space is pressed (`WordFixer.swift`, on by default, can be switched off).** A "noisy channel" decoder, the same idea phone keyboards use, kept small enough to explain:
 
-    score(word) = Σ log P(letter i | tap i) + log P(word)
+    score(word) = log P(taps | word) + log P(word)
 
     - **P(letter | tap)** comes from this person's touch model (touch evidence only; the letter-pair hint is left out so it isn't counted twice). Each letter gets at least 10⁻⁶, so one far-off tap can't rule a word out.
-    - **P(word)** comes from the 20,000 most common English words (`Resources/words.txt`, built by `tools/make_wordlist.py`; profanity, slurs and sexual words filtered out).
-    - Every listed word with the same number of letters competes with what was typed (an unlisted typed word gets the rarest word's prior). The scores become probabilities with softmax. The word changes only if the best one is ≥ 80% likely.
+    - **P(word)** comes from the 40,000 most common English words (`Resources/words.txt`, built by `tools/make_wordlist.py`; profanity, slurs and sexual words filtered out).
+    - **P(taps | word)** lines the taps up with the word's letters (dynamic programming, like a spell checker). Usually each tap means one letter, but a tap can also be **extra** (a repeated tap on the same letter, a tremor "bounce", is the likeliest kind), a letter can be **missed**, or two letters can be **swapped**. Each of these costs a fixed penalty, so the plain reading wins unless another word is much better.
+    - Every listed word with one letter more, the same number, or one fewer competes with what was typed (an unlisted typed word gets the rarest word's prior). The scores become probabilities with softmax. The word changes only if the best one is ≥ 80% likely.
+    - **Checking its own confidence.** After calibration we test how sure the touch model says it is against how often it was actually right on this person's taps (each tap scored by a model that never saw it). If it was too sure, its letter probabilities are turned down for word fixing (`ModelFitter.confidenceScale`, never turned up), so "80% sure" means closer to 80% for this person.
     - Letters picked in the two-choice bar are treated as certain. Undo restores the typed word. Capitals are kept, and ALL-CAPS words are left alone.
     - Not used in the typing comparison, so that test still measures touch reading alone. A word fix is a guess, so online learning doesn't learn from it.
-    - **Simulation result** (synthetic noisy typist, σ = 10 pt, typing once with no corrections): words right **64% → 90%**. A steady typist (σ = 3 pt) stays at 100%.
-    - Same length only: a missing or extra letter isn't fixed.
+    - **Simulation result** (synthetic noisy typist, σ = 10 pt, typing once with no corrections): words right **64% → 93%**. A steady typist (σ = 3 pt) stays at 100%. A typist who also misses some letters and taps some twice (σ = 6 pt): **70% → 89%**.
+    - At most about one missing, extra or swapped letter per word is realistic to fix; heavily garbled words are left alone.
 12. **"What it learned about my touch"** (⚙︎). For each letter it draws an arrow from the key's middle to where this person's taps really land, with an oval for their spread. A dashed oval shows the calibration-only model, so you can see how far it has adapted since. Below, one plain sentence gives the average offset.
 
 **Demo view.** Turn on ⚙︎ → *Show my touches*. Each tap is drawn with:
@@ -128,7 +130,7 @@ We used an AI coding assistant (Claude) to help write and review code, tests and
 
 | | Status |
 |---|---|
-| Touch engine + 60 unit tests (calibration, scoring, sparse data, ambiguity, repeated letters, undo/choice, per-layer evaluation, online learning under drift and no drift, labeling rules, change detection, whole-word fixing, comparison statistics, storage, delete, no typed text on disk) | **Implemented and passing** (`swift test`, Swift 5.10) |
+| Touch engine + 64 unit tests (calibration, scoring, sparse data, ambiguity, repeated letters, undo/choice, per-layer evaluation, online learning under drift and no drift, labeling rules, change detection, whole-word fixing, comparison statistics, storage, delete, no typed text on disk) | **Implemented and passing** (`swift test`, Swift 5.10) |
 | Keyboard extension and containing app | **Built in Xcode and running on an iPhone** (team-tested). |
 | Device behavior (enabling, typing in other apps, switching, persistence, secure fields) | **Checked by the team on one iPhone.** The full list is in docs/MAC_AND_IPHONE.md. |
 | Testing with real users | **Team testing so far** (including typing with the non-dominant hand to simulate off-target taps). Sessions with older adults are starting. We have not tested with people who have specific motor conditions, and we make no claims about them. |
@@ -137,7 +139,7 @@ We used an AI coding assistant (Claude) to help write and review code, tests and
 
 - Online learning needs a few dozen letters to catch up with a big change; recalibrating is faster. Its labels are inferred from behavior (picks, corrections, kept letters), so unusual editing habits could teach it the wrong thing. "Go back to just my calibration" undoes this.
 - The cursor can't be moved from our keyboard. Use the host app's text selection.
-- Word fixing only handles words of the same length (no missing or extra letters), English only, and there is no word prediction, dictation or emoji.
+- Word fixing handles wrong, missing, extra and swapped letters, but only within one letter of the typed length, English only. There is no word prediction, dictation or emoji.
 - Word fixing reads the current word before the cursor so it can replace it. The word is held in memory only and cleared at the next space.
 - The keys are drawn on screen and are **not exposed to VoiceOver** individually.
 - Some apps and fields block third-party keyboards.

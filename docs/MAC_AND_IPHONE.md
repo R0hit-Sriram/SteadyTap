@@ -86,6 +86,8 @@ Write down the iPhone model, iOS version, date and pass/fail for each item. Don'
   - Counts survive force-quitting the host app (saved every 10 letters and when the keyboard closes).
 - [ ] **Fix misspelled words** (on by default):
   - Type "tge" with the middle tap a little toward H, then space. It becomes "the ", and the bar says “Fixed "tge" → "the"”. Undo gives back "tge ".
+  - Also try "helllo" → "hello" (extra letter), "becuse" → "because" (missing letter), "teh" → "the" (swapped).
+  - Pressing space never feels slow, even on long words.
   - Carefully typed real words ("car", "form") and names stay as typed.
   - Capital first letters are kept ("Tge" → "The").
   - Typing feels as fast as before. If space lags, tell us.
