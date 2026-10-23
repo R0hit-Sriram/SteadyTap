@@ -194,6 +194,45 @@ final class WordFixTests: XCTestCase {
         XCTAssert((0.1 ... 1).contains(s))
     }
 
+    func testACarefulTypistsTyposAreFixedToo() {
+        // A steady person's model is very sure of every key, so this needs the spelling-slip allowance.
+        var user = SyntheticUser(sigma: 3)
+        let samples = user.calibrate(CalibrationSession.standardSets(layout: layout390).flatMap { $0 }, layout: layout390)
+        for (typed, want) in [("tge ", "the "), ("becuse ", "because "), ("car ", "car "), ("form ", "form "), ("hat ", "hat ")] {
+            let (session, buffer) = wordSession()
+            session.model = ModelFitter.fit(samples, layout: layout390)
+            type(typed, session)
+            XCTAssertEqual(buffer.text, want, typed)
+        }
+    }
+
+    func testWordIsFixedEvenWhenTheSpaceWasACloseCall() {
+        let (session, buffer) = wordSession()
+        session.askThreshold = 0.99 // every tap is "unsure"
+        type("tge ", session, nudge: [1: Vec2(12, 0)])
+        XCTAssertEqual(buffer.text, "the ")
+    }
+
+    func testIfThatSpaceWasReallyALetterTheTypedWordComesBack() {
+        let (session, buffer) = wordSession()
+        session.askThreshold = 0.99
+        type("tge", session, nudge: [1: Vec2(12, 0)])
+        session.handle(tapAt(center("space") + Vec2(-60, -22), t: 9), layout: layout390)
+        guard session.pendingChoice?.inserted == " " else { return } // this tap wasn't a close call on this layout
+        session.chooseAlternative()
+        XCTAssertTrue(buffer.text.hasPrefix("tge"), buffer.text)
+        XCTAssertFalse(buffer.text.contains(" "))
+    }
+
+    func testEmojiIsTypedAsIsAndUndoRemovesIt() {
+        let (session, buffer) = wordSession()
+        type("hi ", session)
+        session.insertText("👍")
+        XCTAssertEqual(buffer.text, "hi 👍")
+        session.undoLast()
+        XCTAssertEqual(buffer.text, "hi ")
+    }
+
     func testOldSettingsTurnWordFixingOn() throws {
         let s = try JSONDecoder().decode(KeyboardSettings.self, from: Data(#"{"adaptationOn":true}"#.utf8))
         XCTAssertTrue(s.fixWords)

@@ -86,7 +86,7 @@ Full steps and the device checklist are in [docs/MAC_AND_IPHONE.md](docs/MAC_AND
 
     score(word) = log P(taps | word) + log P(word)
 
-    - **P(letter | tap)** comes from this person's touch model (touch evidence only; the letter-pair hint is left out so it isn't counted twice). Each letter gets at least 10⁻⁶, so one far-off tap can't rule a word out.
+    - **P(letter | tap)** comes from this person's touch model (touch evidence only; the letter-pair hint is left out so it isn't counted twice). Each letter also keeps a 1% "spelling slip" chance, shared across the alphabet, so even a tap right on a key can be a typo (otherwise a careful typist's typos could never be fixed).
     - **P(word)** comes from the 40,000 most common English words (`Resources/words.txt`, built by `tools/make_wordlist.py`; profanity, slurs and sexual words filtered out).
     - **P(taps | word)** lines the taps up with the word's letters (dynamic programming, like a spell checker). Usually each tap means one letter, but a tap can also be **extra** (a repeated tap on the same letter, a tremor "bounce", is the likeliest kind), a letter can be **missed**, or two letters can be **swapped**. Each of these costs a fixed penalty, so the plain reading wins unless another word is much better.
     - Every listed word with one letter more, the same number, or one fewer competes with what was typed (an unlisted typed word gets the rarest word's prior). The scores become probabilities with softmax. The word changes only if the best one is ≥ 80% likely.
@@ -130,7 +130,7 @@ We used an AI coding assistant (Claude) to help write and review code, tests and
 
 | | Status |
 |---|---|
-| Touch engine + 64 unit tests (calibration, scoring, sparse data, ambiguity, repeated letters, undo/choice, per-layer evaluation, online learning under drift and no drift, labeling rules, change detection, whole-word fixing, comparison statistics, storage, delete, no typed text on disk) | **Implemented and passing** (`swift test`, Swift 5.10) |
+| Touch engine + 68 unit tests (calibration, scoring, sparse data, ambiguity, repeated letters, undo/choice, per-layer evaluation, online learning under drift and no drift, labeling rules, change detection, whole-word fixing, comparison statistics, storage, delete, no typed text on disk) | **Implemented and passing** (`swift test`, Swift 5.10) |
 | Keyboard extension and containing app | **Built in Xcode and running on an iPhone** (team-tested). |
 | Device behavior (enabling, typing in other apps, switching, persistence, secure fields) | **Checked by the team on one iPhone.** The full list is in docs/MAC_AND_IPHONE.md. |
 | Testing with real users | **Team testing so far** (including typing with the non-dominant hand to simulate off-target taps). Sessions with older adults are starting. We have not tested with people who have specific motor conditions, and we make no claims about them. |
@@ -139,7 +139,7 @@ We used an AI coding assistant (Claude) to help write and review code, tests and
 
 - Online learning needs a few dozen letters to catch up with a big change; recalibrating is faster. Its labels are inferred from behavior (picks, corrections, kept letters), so unusual editing habits could teach it the wrong thing. "Go back to just my calibration" undoes this.
 - The cursor can't be moved from our keyboard. Use the host app's text selection.
-- Word fixing handles wrong, missing, extra and swapped letters, but only within one letter of the typed length, English only. There is no word prediction, dictation or emoji.
+- Word fixing handles wrong, missing, extra and swapped letters, but only within one letter of the typed length, English only. There is no word prediction or dictation. Emoji come from a small built-in panel of 48 common ones.
 - Word fixing reads the current word before the cursor so it can replace it. The word is held in memory only and cleared at the next space.
 - The keys are drawn on screen and are **not exposed to VoiceOver** individually.
 - Some apps and fields block third-party keyboards.

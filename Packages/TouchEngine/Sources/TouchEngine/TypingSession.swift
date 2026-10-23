@@ -160,7 +160,7 @@ public final class TypingSession {
 
         switch key.kind {
         case .character, .space:
-            if key.kind == .space, !decision.isAmbiguous { fixWord() }
+            if key.kind == .space { fixWord() }
             let text = cased(key.output ?? "")
             target?.insert(text)
             undo = lastWordFix.map { .replaced(old: $0.typed + text, new: $0.fixed + text) } ?? .inserted(text)
@@ -212,9 +212,19 @@ public final class TypingSession {
         pendingChoice = nil
         // Only swap if the cursor is still right after what we typed.
         guard let target, target.textBeforeCursor?.hasSuffix(choice.inserted) == true else { return }
-        for _ in choice.inserted { target.deleteBackward() }
-        target.insert(choice.alternative)
-        undo = .replaced(old: choice.inserted, new: choice.alternative)
+        if let fix = lastWordFix, choice.inserted == " ", target.textBeforeCursor?.hasSuffix(fix.fixed + " ") == true {
+            // That space was really a letter, so the word wasn't finished: put back what was typed.
+            for _ in fix.fixed + " " { target.deleteBackward() }
+            target.insert(fix.typed + choice.alternative)
+            undo = .replaced(old: fix.fixed + " ", new: fix.typed + choice.alternative)
+            lastWordFix = nil
+            stats.wordFixes -= 1
+            word = []
+        } else {
+            for _ in choice.inserted { target.deleteBackward() }
+            target.insert(choice.alternative)
+            undo = .replaced(old: choice.inserted, new: choice.alternative)
+        }
         stats.choicesChanged += 1
         if word.last?.output == choice.inserted, let letter = choice.alternative.lowercased().first,
            choice.alternative.count == 1, LetterContext.index(of: letter) < 26 {
@@ -371,6 +381,17 @@ public final class TypingSession {
         target?.insert(extra)
         undo = .inserted(extra)
         forgetRecent() // this letter isn't tied to a tracked touch
+    }
+
+    /// Text from outside the letter keys (the emoji panel): typed as is, never decoded, fixed or learned from.
+    public func insertText(_ text: String) {
+        pendingChoice = nil
+        pendingExtra = nil
+        lastWordFix = nil
+        forgetRecent()
+        target?.insert(text)
+        undo = .inserted(text)
+        refreshAutoShift()
     }
 
     public var canUndo: Bool { undo != nil }

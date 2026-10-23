@@ -12,6 +12,8 @@ struct KeyboardRootView: View {
                     ToolbarView(c: c).frame(height: c.toolbarHeight)
                     SurfaceView(c: c).frame(height: c.layout.height)
                 }
+            case .emoji:
+                EmojiView(c: c)
             case .menu:
                 MenuView(c: c)
             case .learned:
@@ -138,6 +140,7 @@ struct TypingBar: View {
                 }
             }
             .frame(maxWidth: .infinity)
+            BarButton(title: "Emoji", systemImage: "face.smiling") { c.screen = .emoji }
             BarButton(title: "Undo", systemImage: "arrow.uturn.backward") { c.undo() }
                 .disabled(!s.canUndo)
         }
@@ -321,7 +324,9 @@ struct CalibrationDoneView: View {
 
     var body: some View {
         Panel(title: "Your touch pattern") {
-            if let m = c.profile?.model, !m.evaluation.isEmpty {
+            if c.isFitting {
+                ProgressView("Learning your touch pattern…").frame(maxWidth: .infinity)
+            } else if let m = c.profile?.model, !m.evaluation.isEmpty {
                 Text("Each of your \(c.profile?.samples.count ?? 0) calibration taps was predicted by a model that had **not** seen that tap. Share read correctly:")
                     .font(.callout)
                 Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 6) {
@@ -342,7 +347,7 @@ struct CalibrationDoneView: View {
                 Text("Checked on taps from this one calibration session, so everyday typing may score lower. These numbers are not a medical measurement.")
                     .font(.footnote).foregroundStyle(.secondary)
             }
-            Button("Start typing") { c.screen = .typing }.buttonStyle(.borderedProminent)
+            Button("Start typing") { c.screen = .typing }.buttonStyle(.borderedProminent).disabled(c.isFitting)
         }
     }
 }
@@ -484,5 +489,45 @@ struct LearnedView: View {
         let parts = [part(o.x, "to the right", "to the left"), part(o.y, "lower", "higher")].compactMap { $0 }
         return parts.isEmpty ? "On average your taps land close to the middle of the key you mean."
             : "Compared with the middle of the key you mean, your taps land on average \(parts.joined(separator: " and "))."
+    }
+}
+
+// MARK: - Emoji
+
+/// Big, well-spaced emoji buttons (easier to hit than the system emoji keyboard). Emoji are typed as is.
+struct EmojiView: View {
+    @ObservedObject var c: KeyboardController
+
+    static let emoji = ["😀", "😂", "😊", "😍", "🥰", "😘", "😉", "😎",
+                        "🤔", "😮", "😢", "😭", "😡", "😴", "🤒", "🙂",
+                        "👍", "👎", "👏", "🙏", "💪", "👋", "🤝", "👌",
+                        "❤️", "💙", "💚", "💛", "💜", "🧡", "💯", "🔥",
+                        "🎉", "🎂", "🎁", "☀️", "🌧️", "🌸", "⭐️", "✅",
+                        "❌", "☕️", "🍕", "🏠", "🚗", "✈️", "📞", "📷"]
+
+    var body: some View {
+        VStack(spacing: 0) {
+            ScrollView {
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 8), spacing: 4) {
+                    ForEach(Self.emoji, id: \.self) { e in
+                        Button { c.insertEmoji(e) } label: {
+                            Text(e).font(.system(size: 30)).frame(maxWidth: .infinity, minHeight: 48)
+                        }
+                        .accessibilityLabel(e)
+                    }
+                }
+                .padding(4)
+            }
+            HStack(spacing: 8) {
+                Button("ABC") { c.screen = .typing }
+                    .font(.headline).frame(width: 72, height: 44)
+                Button { c.insertEmoji(" ") } label: {
+                    Text("space").frame(maxWidth: .infinity, minHeight: 44)
+                }
+                .buttonStyle(.bordered)
+                BarButton(title: "Delete", systemImage: "delete.left") { c.repeatBackspace() }
+            }
+            .padding(.horizontal, 6).padding(.bottom, 4)
+        }
     }
 }

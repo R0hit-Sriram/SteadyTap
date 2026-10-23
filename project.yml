@@ -63,3 +63,15 @@ targets:
             PrefersRightToLeft: false
             PrimaryLanguage: en-US
             RequestsOpenAccess: false         # no Full Access: no network, no shared container
+
+schemes:
+  SteadyTap:
+    build:
+      targets:
+        SteadyTap: all
+        SteadyTapKeyboard: all
+    run:
+      # Release runs the touch math several times faster than Debug. Switch to Debug only to use breakpoints.
+      config: Release
+    archive:
+      config: Release

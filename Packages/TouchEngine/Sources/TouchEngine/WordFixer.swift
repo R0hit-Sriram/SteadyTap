@@ -63,6 +63,10 @@ public enum WordFixer {
     /// Smallest probability a tap gives any letter, so one far-off letter can't make a word impossible.
     public static let letterFloor = 1e-6
     public static let fixThreshold = 0.8
+    /// Chance that a tap landed exactly where the person aimed, but they aimed at the wrong letter (a spelling
+    /// slip, not a touch error). Without it, a careful typist's typos could never be fixed, because their
+    /// touch model is so sure of every key.
+    public static let slip = 0.01
     public static let maxLength = 15
 
     /// How likely each kind of slip is, per word (log probabilities). Rare on purpose: a slip has to be
@@ -89,7 +93,7 @@ public enum WordFixer {
         }
         guard let top = scores.max(), top > -Double.infinity else { return nil }
         let sum = scores.reduce(0) { $0 + exp($1 - top) }
-        return scores.map { max($0 - top - log(sum), log(letterFloor)) }
+        return scores.map { log((1 - slip) * exp($0 - top) / sum + slip / 26) }
     }
 
     /// Evidence for a letter the person picked themselves in the choice bar: that letter, for sure.

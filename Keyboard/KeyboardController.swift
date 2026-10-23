@@ -12,7 +12,7 @@ final class ProxyTarget: TextTarget {
 }
 
 enum Screen: Equatable {
-    case typing, menu, learned, calibrating, calibrationDone, comparisonIntro, comparing, comparisonDone
+    case typing, emoji, menu, learned, calibrating, calibrationDone, comparisonIntro, comparing, comparisonDone
 }
 
 /// One touch kept on screen for the "show my touches" view. Memory only.
@@ -106,6 +106,8 @@ final class KeyboardController: ObservableObject {
     @Published private(set) var calibration: CalibrationSession?
     @Published private(set) var comparison: ComparisonRun?
     @Published var keepComparisonResults = false
+    /// True while the touch model is being fitted after calibration (done off the main thread).
+    @Published private(set) var isFitting = false
     /// Bumped after every tap so SwiftUI redraws state held in non-observable engine objects.
     @Published private(set) var revision = 0
 
@@ -165,7 +167,15 @@ final class KeyboardController: ObservableObject {
     func applySettings() {
         session.model = settings.adaptationOn ? profile?.model : nil
         session.context = settings.useLetterPatterns ? .english : nil
-        session.words = settings.fixWords ? .english : nil
+        if settings.fixWords {
+            // Reading 40,000 words takes a moment: do it off the main thread so the keyboard opens instantly.
+            Task { [weak self] in
+                let words = await Task.detached(priority: .userInitiated) { WordList.english }.value
+                if self?.settings.fixWords == true { self?.session.words = words }
+            }
+        } else {
+            session.words = nil
+        }
         session.askThreshold = settings.askLevel.threshold
         session.recordsDemoLine = settings.showTouches
         session.autoCapitalize = hostAutoCapitalizes && settings.capitalizeSentences
@@ -225,9 +235,10 @@ final class KeyboardController: ObservableObject {
     func acceptChoice() { activeSession.acceptChoice(); revision += 1 }
     func keepExtra() { activeSession.keepExtra(); revision += 1 }
     func undo() { activeSession.undoLast(); revision += 1 }
+    func insertEmoji(_ emoji: String) { session.insertText(emoji); revision += 1 }
 
     func repeatBackspace() {
-        guard screen == .typing || screen == .comparing else { return }
+        guard screen == .typing || screen == .comparing || screen == .emoji else { return }
         activeSession.repeatBackspace()
         revision += 1
     }
@@ -278,11 +289,23 @@ final class KeyboardController: ObservableObject {
         let fitLayout = KeyboardLayout.make(page: .letters, width: width,
                                             rowHeight: Self.baseRowHeight * settings.keySize.rowHeightMultiplier,
                                             showNextKeyboard: showGlobe)
-        let newProfile = CalibrationProfile(createdAt: Date(), samples: cal.samples, model: cal.makeModel(layout: fitLayout))
-        try? store.save(newProfile)
-        profile = newProfile
-        applySettings()
+        let samples = cal.samples
+        let filter = RepeatFilter.learn(extraTapGaps: cal.extraTapGaps, intentionalRepeatGaps: cal.intentionalRepeatGaps,
+                                        keyWidth: fitLayout.keyWidth)
+        isFitting = true
         screen = .calibrationDone
+        // Fitting tests every tap against a model that never saw it: lots of math, so keep the screen responsive.
+        Task { [weak self] in
+            let model = await Task.detached(priority: .userInitiated) {
+                ModelFitter.fit(samples, layout: fitLayout, repeatFilter: filter)
+            }.value
+            guard let self else { return }
+            let newProfile = CalibrationProfile(createdAt: Date(), samples: samples, model: model)
+            try? self.store.save(newProfile)
+            self.profile = newProfile
+            self.applySettings()
+            self.isFitting = false
+        }
     }
 
     func cancelCalibration() {

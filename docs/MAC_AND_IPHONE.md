@@ -88,6 +88,9 @@ Write down the iPhone model, iOS version, date and pass/fail for each item. Don'
   - Type "tge" with the middle tap a little toward H, then space. It becomes "the ", and the bar says “Fixed "tge" → "the"”. Undo gives back "tge ".
   - Also try "helllo" → "hello" (extra letter), "becuse" → "because" (missing letter), "teh" → "the" (swapped).
   - Pressing space never feels slow, even on long words.
+  - A typo typed carefully, with every tap right on the key, is fixed too ("tge" → "the").
+- [ ] The 🙂 button above the keys opens big emoji buttons. Tapping one types it, Undo removes it, ABC goes back.
+- [ ] Speed: the keyboard opens right away, and after the last calibration tap "Learning your touch pattern…" shows briefly instead of the screen freezing. Run the SteadyTap scheme (it builds Release, which is much faster than Debug).
   - Carefully typed real words ("car", "form") and names stay as typed.
   - Capital first letters are kept ("Tge" → "The").
   - Typing feels as fast as before. If space lags, tell us.
