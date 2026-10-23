@@ -1,6 +1,6 @@
-# SteadyTap (working name)
+# SteadyTap
 
-An iPhone keyboard for people who can use a touchscreen but often hit the key next to the one they meant. It learns **one person's touch pattern** from a short tapping exercise. It then uses that pattern to read their later taps, directly inside Notes, Messages and other apps.
+An iPhone keyboard for older adults and anyone whose taps often land on the key next to the one they meant, including people with tremor or other motor difficulties. It learns **one person's touch pattern** from a short tapping exercise. It then uses that pattern to read their later taps, directly inside Notes, Messages and other apps.
 
 It is an accessibility tool, not a medical device. It does not diagnose, treat or claim to help any specific condition.
 
@@ -129,9 +129,9 @@ We used an AI coding assistant (Claude) to help write and review code, tests and
 | | Status |
 |---|---|
 | Touch engine + 60 unit tests (calibration, scoring, sparse data, ambiguity, repeated letters, undo/choice, per-layer evaluation, online learning under drift and no drift, labeling rules, change detection, whole-word fixing, comparison statistics, storage, delete, no typed text on disk) | **Implemented and passing** (`swift test`, Swift 5.10) |
-| Keyboard extension and containing app | **Written and syntax-checked only.** Not yet compiled in Xcode or run on an iPhone. |
-| Device behavior (enabling, typing in other apps, switching, persistence, secure fields) | **Not yet verified.** See the checklist. |
-| Testing with people who have motor difficulties | **Not done.** Do not claim results until it is. |
+| Keyboard extension and containing app | **Built in Xcode and running on an iPhone** (team-tested). |
+| Device behavior (enabling, typing in other apps, switching, persistence, secure fields) | **Checked by the team on one iPhone.** The full list is in docs/MAC_AND_IPHONE.md. |
+| Testing with real users | **Team testing so far** (including typing with the non-dominant hand to simulate off-target taps). Sessions with older adults are starting. We have not tested with people who have specific motor conditions, and we make no claims about them. |
 
 ## Known limitations
 

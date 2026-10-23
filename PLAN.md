@@ -1,4 +1,4 @@
-# SteadyTap — Build Plan (CAC 2026, TX-03) — iOS keyboard version
+# SteadyTap — Build Plan (CAC 2026) — iOS keyboard version
 
 Deadline **Oct 26, 2026**. Build: Oct 14–23. Video + buffer: Oct 24–26.
 This plan **replaces** the earlier PWA plan. The product is now an iPhone app with a **custom keyboard extension** that types directly into other apps.
