@@ -60,20 +60,40 @@ struct SurfaceView: UIViewRepresentable {
 
 // MARK: - Toolbar
 
+/// Toolbar button that still counts when the finger slides on the way up.
+/// A plain Button cancels once the touch drifts a few points, which for a shaky hand meant tapping
+/// ⚙︎ two or three times before it opened.
 struct BarButton: View {
     let title: String
     let systemImage: String
     let action: () -> Void
+    @Environment(\.isEnabled) private var isEnabled
+    @State private var pressed = false
+
+    /// How far the finger may wander and still count, measured from where it went down.
+    private static let slop: CGFloat = 60
 
     var body: some View {
-        Button(action: action) {
-            Image(systemName: systemImage)
-                .font(.title2)
-                .frame(width: 52, height: 44)
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(title)
+        Image(systemName: systemImage)
+            .font(.title2)
+            .frame(width: 52, height: 44)
+            .background(pressed ? Color.secondary.opacity(0.3) : .clear,
+                        in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .opacity(isEnabled ? 1 : 0.35)
+            .contentShape(Rectangle())
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { _ in if !pressed { pressed = true } }
+                    .onEnded { v in
+                        pressed = false
+                        let moved = max(abs(v.location.x - v.startLocation.x), abs(v.location.y - v.startLocation.y))
+                        if moved <= Self.slop { action() }
+                    }
+            )
+            .accessibilityElement()
+            .accessibilityLabel(title)
+            .accessibilityAddTraits(.isButton)
+            .accessibilityAction { action() }
     }
 }
 

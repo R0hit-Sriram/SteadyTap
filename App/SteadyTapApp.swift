@@ -62,21 +62,21 @@ struct HomeView: View {
     @AppStorage("step.calibrated") private var calibrated = false
     @AppStorage("step.typed") private var typed = false
     @State private var path: [Route] = []
-    /// True once the big title has scrolled up under the bar, so the small one takes over.
-    @State private var titleTucked = false
+    /// 0 while the page sits at the top, 1 once the title has finished shrinking into the corner.
+    @State private var titleProgress: CGFloat = 0
     @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         NavigationStack(path: $path) {
-            ScrollView {
+            VStack(spacing: 0) {
+                header
+                ScrollView {
                 VStack(alignment: .leading, spacing: 32) {
-                    Text(appName)
-                        .font(.largeTitle.bold())
-                        .accessibilityAddTraits(.isHeader)
-                        .padding(.bottom, -14)
+                    Color.clear
+                        .frame(height: 0)
                         .background(GeometryReader { g in
-                            Color.clear.preference(key: TitleTopKey.self,
-                                                   value: g.frame(in: .named("home")).maxY)
+                            Color.clear.preference(key: ScrollTopKey.self,
+                                                   value: g.frame(in: .named("home")).minY)
                         })
                     HeroCard(action: next.title) { path.append(next.route) }
                     setup
@@ -89,20 +89,15 @@ struct HomeView: View {
                 }
                 .padding(.horizontal, 16)
                 .padding(.bottom, 24)
-            }
-            .coordinateSpace(name: "home")
-            .onPreferenceChange(TitleTopKey.self) { top in
-                let tucked = top < 8
-                if tucked != titleTucked {
-                    withAnimation(.easeInOut(duration: 0.2)) { titleTucked = tucked }
+                }
+                .coordinateSpace(name: "home")
+                .onPreferenceChange(ScrollTopKey.self) { top in
+                    // Tracks the finger, so no animation here: the size follows the scroll itself.
+                    titleProgress = min(max(-top / 44, 0), 1)
                 }
             }
             .background(Palette.background.ignoresSafeArea())
-            // The title lives in the page, so it stays big and on the left. Once it scrolls away a
-            // small one fades in, still on the left — a navigation large title would slide to the middle.
-            .navigationTitle("")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar { tuckedTitle }
+            .toolbar(.hidden, for: .navigationBar)
             .navigationDestination(for: Route.self) { route in
                 switch route {
                 case .setup: SetupView()
@@ -115,23 +110,25 @@ struct HomeView: View {
         }
     }
 
-    /// The small left title that replaces the big one once it scrolls away. Plain text, no button chrome.
-    @ToolbarContentBuilder private var tuckedTitle: some ToolbarContent {
-        if #available(iOS 26, *) {
-            ToolbarItem(placement: .topBarLeading) { tuckedLabel }
-                .sharedBackgroundVisibility(.hidden)
-        } else {
-            ToolbarItem(placement: .topBarLeading) { tuckedLabel }
+    /// The name, pinned at the top left. It shrinks smoothly into the corner as the page scrolls,
+    /// rather than jumping to a small centred title the way a navigation large title does.
+    /// Scaling (not a font change) keeps it smooth: the glyphs are drawn once and resized.
+    private var header: some View {
+        let p = titleProgress
+        return HStack(spacing: 0) {
+            Text(appName)
+                .font(.largeTitle.bold())
+                .fixedSize()
+                .scaleEffect(1 - 0.5 * p, anchor: .leading)
+                .frame(height: 41 - 19 * p, alignment: .leading)
+                .accessibilityAddTraits(.isHeader)
+            Spacer(minLength: 0)
         }
-    }
-
-    private var tuckedLabel: some View {
-        Text(appName)
-            .font(.headline)
-            .lineLimit(1)
-            .fixedSize()
-            .opacity(titleTucked ? 1 : 0)
-            .accessibilityHidden(!titleTucked)
+        .padding(.horizontal, 16)
+        .padding(.top, 10 - 4 * p)
+        .padding(.bottom, 10 - 5 * p)
+        .background(Palette.background)
+        .overlay(alignment: .bottom) { Divider().opacity(p) }
     }
 
     private var doneCount: Int { [added, calibrated, typed].filter { $0 }.count }

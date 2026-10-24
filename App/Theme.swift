@@ -86,9 +86,9 @@ struct GlassFinish: ViewModifier {
     }
 }
 
-/// Bottom edge of the page's big title, in the scroll view's own space.
-struct TitleTopKey: PreferenceKey {
-    static var defaultValue: CGFloat = .greatestFiniteMagnitude
+/// Top edge of the scroll content, in the scroll view's own space: 0 at rest, negative once scrolled.
+struct ScrollTopKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = min(value, nextValue()) }
 }
 

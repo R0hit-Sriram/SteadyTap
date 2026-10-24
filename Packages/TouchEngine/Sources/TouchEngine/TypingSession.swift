@@ -106,9 +106,7 @@ public final class TypingSession {
     private var deletedTouch: RecentTouch?
     /// The word being typed: each letter and how likely each a–z was for its tap. MEMORY ONLY; cleared at
     /// the next space or non-letter key.
-    private var word: [(output: String, evidence: [Double])] = [] { didSet { wordVersion += 1 } }
-    private var wordVersion = 0
-    private var cachedSuggestions: (key: String, value: WordFixer.Suggestions)?
+    private var word: [(output: String, evidence: [Double])] = []
     public static let recentLimit = 3
     public static let confidentThreshold = 0.9
     public static let correctionWindow = 5.0
@@ -211,6 +209,7 @@ public final class TypingSession {
             break // the keyboard UI hands this to the system
         }
         refreshAutoShift()
+        refreshSuggestions()
         return decision
     }
 
@@ -246,6 +245,7 @@ public final class TypingSession {
             demoAdapted.removeLast()
             demoAdapted += choice.alternative
         }
+        refreshSuggestions()
     }
 
     /// The person tapped the letter we already typed — an explicit confirmation.
@@ -258,6 +258,7 @@ public final class TypingSession {
         }
         labelLast(LabeledTouch(kind: .picked, keyID: choice.insertedKeyID, point: choice.point, misread: false),
                   newOutput: choice.inserted)
+        refreshSuggestions()
     }
 
     // MARK: Fixing whole words
@@ -278,14 +279,13 @@ public final class TypingSession {
         word.append((output, evidence))
     }
 
-    /// The suggestion bar for the word being typed (cached until the word or the text changes).
-    public var suggestions: WordFixer.Suggestions {
-        let before = target?.textBeforeCursor ?? ""
-        let key = "\(wordVersion)|\(autocorrects)|\(before.suffix(32))"
-        if let cachedSuggestions, cachedSuggestions.key == key { return cachedSuggestions.value }
-        let value = computeSuggestions(before: before)
-        cachedSuggestions = (key, value)
-        return value
+    /// The suggestion bar for the word being typed. Worked out once after each edit, never while the
+    /// keyboard is drawing: reading the host app's text is a hop into another process, and doing that
+    /// (plus the word scoring) inside every view update left the keyboard too busy to answer a tap.
+    public private(set) var suggestions: WordFixer.Suggestions = .none
+
+    private func refreshSuggestions() {
+        suggestions = computeSuggestions(before: target?.textBeforeCursor ?? "")
     }
 
     private func computeSuggestions(before: String) -> WordFixer.Suggestions {
@@ -316,6 +316,7 @@ public final class TypingSession {
         undo = .replaced(old: typed, new: chosen + " ")
         forgetRecent() // the touches no longer line up with the text
         refreshAutoShift()
+        refreshSuggestions()
     }
 
     /// Put the typed word back after an autocorrect (the bar offers this right after a fix), and don't
@@ -410,6 +411,7 @@ public final class TypingSession {
         lastWordFix = nil
         deleteOne()
         refreshAutoShift()
+        refreshSuggestions()
     }
 
     private func deleteOne() {
@@ -439,6 +441,7 @@ public final class TypingSession {
         target?.insert(extra)
         undo = .inserted(extra)
         forgetRecent() // this letter isn't tied to a tracked touch
+        refreshSuggestions()
     }
 
     /// Text from outside the letter keys (the emoji panel): typed as is, never decoded, fixed or learned from.
@@ -450,6 +453,7 @@ public final class TypingSession {
         target?.insert(text)
         undo = .inserted(text)
         refreshAutoShift()
+        refreshSuggestions()
     }
 
     public var canUndo: Bool { undo != nil }
@@ -476,12 +480,14 @@ public final class TypingSession {
         }
         stats.undos += 1
         refreshAutoShift()
+        refreshSuggestions()
     }
 
     /// Call when the host text changed in a way we didn't cause (cursor moved, field changed).
     public func hostTextChanged() {
         lastGesture = nil
         refreshAutoShift()
+        refreshSuggestions()
     }
 
     public func resetStats() {
