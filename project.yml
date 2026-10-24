@@ -32,8 +32,10 @@ targets:
       - path: App
         excludes:
           # Local tool state that sits in the source folders; never part of the app.
+          # Keep this in step with .gitignore, or a fresh clone won't build.
           - "**/.claude-flow/**"
           - "**/.swarm/**"
+          - "**/*.db"
     dependencies:
       - target: SteadyTapKeyboard             # embedded as an app extension
     settings:
@@ -53,8 +55,10 @@ targets:
       - path: Keyboard
         excludes:
           # Local tool state that sits in the source folders; never part of the app.
+          # Keep this in step with .gitignore, or a fresh clone won't build.
           - "**/.claude-flow/**"
           - "**/.swarm/**"
+          - "**/*.db"
     dependencies:
       - package: TouchEngine
     settings:

@@ -11,7 +11,6 @@
 		1FCCD9C98D8D881F8951890A /* KeyboardController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9CABD97401DA6EE0B5EC72F /* KeyboardController.swift */; };
 		682BF95E5BA8C7D39074AC8B /* SteadyTapKeyboard.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 5A9E5E911A2C02630548E28A /* SteadyTapKeyboard.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		6F38870E54CF202B4120736A /* KeyboardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC3804E9315CE116C1197EBD /* KeyboardViewController.swift */; };
-		7CD3E94A8A18E0D1EF10D918 /* ruvector.db in Resources */ = {isa = PBXBuildFile; fileRef = 2C6FBF8D3743E149FBDBBEDB /* ruvector.db */; };
 		939301250CE1D4E7AA351205 /* HowTo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F684AFF0BF52AEE385B2956 /* HowTo.swift */; };
 		C5191A0FB209E813207D46C3 /* KeyboardViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB16CF729056E7D5D6DE1DFC /* KeyboardViews.swift */; };
 		DB8ECC02C1EDE569235DE2B3 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52D6B8C5A0A77DECFF74BECA /* Theme.swift */; };
@@ -46,7 +45,6 @@
 
 /* Begin PBXFileReference section */
 		1FA1337AE8E5268376EDF3A9 /* TouchEngine */ = {isa = PBXFileReference; lastKnownFileType = folder; name = TouchEngine; path = Packages/TouchEngine; sourceTree = SOURCE_ROOT; };
-		2C6FBF8D3743E149FBDBBEDB /* ruvector.db */ = {isa = PBXFileReference; path = ruvector.db; sourceTree = "<group>"; };
 		52D6B8C5A0A77DECFF74BECA /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		5A9E5E911A2C02630548E28A /* SteadyTapKeyboard.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = SteadyTapKeyboard.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		7F684AFF0BF52AEE385B2956 /* HowTo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HowTo.swift; sourceTree = "<group>"; };
@@ -95,7 +93,6 @@
 			children = (
 				7F684AFF0BF52AEE385B2956 /* HowTo.swift */,
 				AE99C511F8DAEF5A50BEBBEA /* Info.plist */,
-				2C6FBF8D3743E149FBDBBEDB /* ruvector.db */,
 				B610C81BCED90B9B7BE71C0E /* SteadyTapApp.swift */,
 				52D6B8C5A0A77DECFF74BECA /* Theme.swift */,
 				CD1D5B39028AA04DC09A4CBD /* TouchMap.swift */,
@@ -133,7 +130,6 @@
 			buildConfigurationList = 0C1020F026DA67B75CA4D533 /* Build configuration list for PBXNativeTarget "SteadyTap" */;
 			buildPhases = (
 				2A4A1A70C4F8CDAF2661EDA8 /* Sources */,
-				0D51DF742983D2C0F6E8690D /* Resources */,
 				B4AF4B274C4A28C3685233BE /* Embed Foundation Extensions */,
 			);
 			buildRules = (
@@ -208,17 +204,6 @@
 			);
 		};
 /* End PBXProject section */
-
-/* Begin PBXResourcesBuildPhase section */
-		0D51DF742983D2C0F6E8690D /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				7CD3E94A8A18E0D1EF10D918 /* ruvector.db in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		2A4A1A70C4F8CDAF2661EDA8 /* Sources */ = {
