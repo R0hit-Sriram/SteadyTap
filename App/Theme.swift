@@ -101,6 +101,11 @@ struct Rise: ViewModifier {
                     withAnimation(.spring(response: 0.55, dampingFraction: 0.8).delay(delay)) { shown = true }
                 }
             }
+            // If the entrance never runs (view built off screen, snapshot during launch), show it anyway.
+            .task {
+                try? await Task.sleep(nanoseconds: 1_500_000_000)
+                shown = true
+            }
     }
 }
 

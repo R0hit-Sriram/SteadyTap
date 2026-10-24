@@ -81,7 +81,15 @@ struct HomeView: View {
                 .padding(.bottom, 24)
             }
             .background(Palette.background.ignoresSafeArea())
-            .navigationTitle(appName)
+            // A plain leading item, so the name stays small and left — a large title would
+            // slide to the middle of the bar as soon as the page scrolls.
+            .navigationTitle("")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Text(appName).font(.headline).lineLimit(1).fixedSize().accessibilityAddTraits(.isHeader)
+                }
+            }
             .navigationDestination(for: Route.self) { route in
                 switch route {
                 case .setup: SetupView()
@@ -325,53 +333,33 @@ struct PageHeader: View {
     }
 }
 
-struct NumberedStep: View {
-    let n: Int
-    let text: Text
-
-    var body: some View {
-        Label {
-            text.fixedSize(horizontal: false, vertical: true)
-        } icon: {
-            Image(systemName: "\(n).circle.fill").foregroundStyle(Palette.accent).font(.title3)
-        }
-    }
-}
-
 struct SetupView: View {
     var body: some View {
         List {
             Section { PageHeader(route: .setup) }
             Section {
-                NumberedStep(n: 1, text: Text("Open **Settings**."))
-                NumberedStep(n: 2, text: Text("Go to **General → Keyboard → Keyboards**."))
-                NumberedStep(n: 3, text: Text("Tap **Add New Keyboard…** and choose **\(appName)**."))
-                NumberedStep(n: 4, text: Text("Leave **Allow Full Access** off. \(appName) doesn’t need it."))
-            } header: {
-                Text("In the Settings app")
-            } footer: {
-                Text("The button below opens \(appName)’s page in Settings. If you see **Keyboards** there, you can turn it on directly.")
+                HowToView(steps: HowTo.enableKeyboard)
+                    .frame(maxWidth: .infinity)
+                    .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
+                    .listRowBackground(Color.clear)
             }
-            Section("Switching to it while typing") {
-                Text("In any text field, tap or hold \(Image(systemName: "globe")) and pick \(appName). Tap \(Image(systemName: "globe")) on \(appName) to switch back.")
+            Section {
+                Button {
+                    if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) }
+                } label: {
+                    Text("Open Settings").font(.headline).frame(maxWidth: .infinity, minHeight: 44)
+                }
+                .prominentButton()
+                .listRowInsets(EdgeInsets(top: 4, leading: 20, bottom: 4, trailing: 20))
+                .listRowBackground(Color.clear)
             }
-            Section("Where it can’t be used") {
-                Text("For your security, iPhone always switches to Apple’s keyboard in password fields and phone-number pads. Some apps, often banking apps, also block other keyboards.")
+            Section {
+                Text("In password boxes, iPhone always uses Apple’s keyboard.")
             }
         }
         .listStyle(.insetGrouped)
         .navigationTitle(Route.setup.title)
         .navigationBarTitleDisplayMode(.inline)
-        .safeAreaInset(edge: .bottom) {
-            Button {
-                if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) }
-            } label: {
-                Text("Open Settings").font(.headline).frame(maxWidth: .infinity)
-            }
-            .prominentButton()
-            .padding(.horizontal, 20)
-            .padding(.bottom, 8)
-        }
     }
 }
 
@@ -381,10 +369,11 @@ struct PracticeView: View {
     var body: some View {
         List {
             Section { PageHeader(route: .practice) }
-            Section("Calibrate") {
-                NumberedStep(n: 1, text: Text("Tap the box below."))
-                NumberedStep(n: 2, text: Text("Switch to \(appName) with \(Image(systemName: "globe"))."))
-                NumberedStep(n: 3, text: Text("Tap \(Image(systemName: "gearshape")) on the keyboard and choose **Calibrate**. You’ll tap highlighted keys in three short sets."))
+            Section {
+                HowToView(steps: HowTo.calibrate)
+                    .frame(maxWidth: .infinity)
+                    .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
+                    .listRowBackground(Color.clear)
             }
             Section {
                 ZStack(alignment: .topLeading) {
@@ -407,8 +396,8 @@ struct PracticeView: View {
             } footer: {
                 Text("Nothing here is saved. It’s cleared when you leave this screen.")
             }
-            Section("See what it sees") {
-                Text("Turn on **Show my touches** in the keyboard’s \(Image(systemName: "gearshape")) menu. Each tap shows where it landed and which key was chosen.")
+            Section {
+                Text("To watch it read your taps, turn on **Show my touches** in the keyboard’s \(Image(systemName: "gearshape")) menu.")
             }
         }
         .listStyle(.insetGrouped)

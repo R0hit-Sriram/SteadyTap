@@ -70,7 +70,9 @@ struct BarButton: View {
             Image(systemName: systemImage)
                 .font(.title2)
                 .frame(width: 52, height: 44)
+                .contentShape(Rectangle())
         }
+        .buttonStyle(.plain)
         .accessibilityLabel(title)
     }
 }
@@ -123,11 +125,13 @@ struct TypingBar: View {
         // While a word is being typed (or was just autocorrected) the bar is Apple's: three word slots.
         let showsWords = s.pendingChoice == nil && s.pendingExtra == nil && !c.settings.showTouches
             && (s.lastWordFix != nil || !s.suggestions.typed.isEmpty)
+        // ⚙︎ and Undo keep their places whatever the middle shows: the suggestion bar must never
+        // take over the gear's spot, or the first tap there would pick a word instead of opening settings.
         HStack(spacing: 4) {
+            BarButton(title: "Settings", systemImage: "gearshape") { c.screen = .menu }
             if showsWords {
                 SuggestionBar(c: c).frame(maxWidth: .infinity)
             } else {
-                BarButton(title: "Settings", systemImage: "gearshape") { c.screen = .menu }
                 status.frame(maxWidth: .infinity)
                 BarButton(title: "Emoji", systemImage: "face.smiling") { c.screen = .emoji }
             }
