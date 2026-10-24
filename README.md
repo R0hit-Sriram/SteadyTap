@@ -35,14 +35,23 @@ cd Packages/TouchEngine && swift test
 docker run --rm -v "$PWD/Packages/TouchEngine:/pkg" -w /pkg swift:5.10 swift test --scratch-path /tmp/b
 ```
 
-**iOS app (Mac with Xcode 15+):**
+**iOS app (Mac with Xcode 15+):** the Xcode project is committed, so there is nothing to install first.
 ```bash
-brew install xcodegen
-# edit BUNDLE_ID_BASE and DEVELOPMENT_TEAM at the top of project.yml
-xcodegen generate
-open SteadyTap.xcodeproj      # select the SteadyTap scheme + your iPhone, press Run
+git clone https://github.com/R0hit-Sriram/SteadyTap.git
+open SteadyTap/SteadyTap.xcodeproj   # pick the SteadyTap scheme + your iPhone, press Run
 ```
+Set **Signing & Capabilities ▸ Team** to your own Apple ID for both targets (or edit `BUNDLE_ID_BASE`
+and `DEVELOPMENT_TEAM` at the top of `project.yml`), since the committed values are one team member's.
+
+`project.yml` is still the source of truth. After changing it, run `xcodegen generate`
+(`brew install xcodegen`) and commit the regenerated project. If a pull ever conflicts inside
+`project.pbxproj`, delete the `.xcodeproj` and regenerate it rather than merging by hand.
+
 Full steps and the device checklist are in [docs/MAC_AND_IPHONE.md](docs/MAC_AND_IPHONE.md). To rename the product, change `APP_DISPLAY_NAME` in `project.yml`.
+
+**iPhone or iPad only.** Building and installing an iOS app needs Xcode, which Apple ships for macOS
+alone, so a Windows or Linux machine cannot build or run SteadyTap. Those teammates can still read and
+change the code, the engine, and `project.yml`; the engine's tests run anywhere Swift does (above).
 
 ## How the algorithm works
 

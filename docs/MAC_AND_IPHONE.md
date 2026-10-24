@@ -6,7 +6,7 @@ This guide is for the teammate who builds on a Mac. The code was written on Wind
 
 1. Install Xcode 15 or newer from the App Store. Open it once and let it install its components.
 2. Xcode ▸ Settings ▸ Accounts: add your Apple ID. A free personal team works; its builds expire after 7 days.
-3. Install XcodeGen: `brew install xcodegen` (if needed, install Homebrew from https://brew.sh first).
+3. Install XcodeGen: `brew install xcodegen` (if needed, install Homebrew from https://brew.sh first). Only needed if you change `project.yml` — the generated `SteadyTap.xcodeproj` is committed, so you can open it straight away.
 4. On the iPhone, turn on **Settings ▸ Privacy & Security ▸ Developer Mode** (iOS 16+), then restart. The option appears after the iPhone has been connected to Xcode once.
 
 ## 2. Build
@@ -23,7 +23,7 @@ open SteadyTap.xcodeproj
 - Choose the **SteadyTap** scheme and your connected iPhone, then press **Run (⌘R)**.
 - If signing fails, open both targets ▸ *Signing & Capabilities* and check that "Automatically manage signing" is on with your team selected. Then copy the team ID into `project.yml` so it survives regeneration.
 - The first time, the iPhone may ask you to trust the developer: **Settings ▸ General ▸ VPN & Device Management**.
-- Run `xcodegen generate` again after every `git pull` that adds or removes files.
+- The committed `SteadyTap.xcodeproj` is regenerated whenever `project.yml` changes, so a plain `git pull` is usually enough. Run `xcodegen generate` yourself if a pull adds or removes source files and the build can't find them.
 
 **Run the engine unit tests:**
 ```bash
