@@ -41,11 +41,13 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: $(BUNDLE_ID_BASE)
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
     info:
       path: App/Info.plist
       properties:
         CFBundleDisplayName: $(APP_DISPLAY_NAME)
-        UILaunchScreen: {}
+        UILaunchScreen:
+          UIImageName: Logo                   # App/Assets.xcassets, centred on the system background
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
 
   SteadyTapKeyboard:

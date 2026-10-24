@@ -116,8 +116,13 @@ struct HomeView: View {
     private var header: some View {
         let p = titleProgress
         return HStack(spacing: 0) {
-            Text(appName)
-                .font(.largeTitle.bold())
+            HStack(spacing: 10) {
+                Image("Logo")
+                    .resizable()
+                    .frame(width: 36, height: 36)
+                    .accessibilityHidden(true)
+                Text(appName).font(.largeTitle.bold())
+            }
                 .fixedSize()
                 .scaleEffect(1 - 0.5 * p, anchor: .leading)
                 .frame(height: 41 - 19 * p, alignment: .leading)
