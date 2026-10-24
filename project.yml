@@ -28,7 +28,12 @@ targets:
   SteadyTap:
     type: application
     platform: iOS
-    sources: [App]
+    sources:
+      - path: App
+        excludes:
+          # Local tool state that sits in the source folders; never part of the app.
+          - "**/.claude-flow/**"
+          - "**/.swarm/**"
     dependencies:
       - target: SteadyTapKeyboard             # embedded as an app extension
     settings:
@@ -44,7 +49,12 @@ targets:
   SteadyTapKeyboard:
     type: app-extension
     platform: iOS
-    sources: [Keyboard]
+    sources:
+      - path: Keyboard
+        excludes:
+          # Local tool state that sits in the source folders; never part of the app.
+          - "**/.claude-flow/**"
+          - "**/.swarm/**"
     dependencies:
       - package: TouchEngine
     settings:

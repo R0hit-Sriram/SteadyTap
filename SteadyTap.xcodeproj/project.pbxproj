@@ -8,20 +8,11 @@
 
 /* Begin PBXBuildFile section */
 		00F417A60DA6E29D8C6F4BB7 /* TouchEngine in Frameworks */ = {isa = PBXBuildFile; productRef = C191DECB5B2630BBAADB7EDC /* TouchEngine */; };
-		1B335E50F5E050732E645CF4 /* stats.json in Resources */ = {isa = PBXBuildFile; fileRef = 638EE86F7875E939671AEACD /* stats.json */; };
-		1EEF844DC773F8462DD1225E /* agentdb-memory.db-wal in Resources */ = {isa = PBXBuildFile; fileRef = B18B08E7FC226CC716DDE022 /* agentdb-memory.db-wal */; };
 		1FCCD9C98D8D881F8951890A /* KeyboardController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9CABD97401DA6EE0B5EC72F /* KeyboardController.swift */; };
-		3644ADF40F7007C57DE24EA0 /* ewc-fisher.json in Resources */ = {isa = PBXBuildFile; fileRef = AA57CD33294B266F27F842D1 /* ewc-fisher.json */; };
-		3A102CACBBD5ED225BBAAD24 /* stats.json in Resources */ = {isa = PBXBuildFile; fileRef = 79A77DDF0D1FB1BA48D3D98D /* stats.json */; };
-		407269CE0C325E838AD412AC /* state.json in Resources */ = {isa = PBXBuildFile; fileRef = 93A28D2D0E6CC75AF5922F08 /* state.json */; };
 		682BF95E5BA8C7D39074AC8B /* SteadyTapKeyboard.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 5A9E5E911A2C02630548E28A /* SteadyTapKeyboard.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		6937E129C69DF0258D04FBB4 /* state.json in Resources */ = {isa = PBXBuildFile; fileRef = A48A32B6BBCA93A00A96F893 /* state.json */; };
 		6F38870E54CF202B4120736A /* KeyboardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC3804E9315CE116C1197EBD /* KeyboardViewController.swift */; };
-		7690E365020A220E09CE0047 /* agentdb-memory.db in Resources */ = {isa = PBXBuildFile; fileRef = 9B0CDE20FF7F084267524B1A /* agentdb-memory.db */; };
 		7CD3E94A8A18E0D1EF10D918 /* ruvector.db in Resources */ = {isa = PBXBuildFile; fileRef = 2C6FBF8D3743E149FBDBBEDB /* ruvector.db */; };
 		939301250CE1D4E7AA351205 /* HowTo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F684AFF0BF52AEE385B2956 /* HowTo.swift */; };
-		93ECB567AA865BCE4DDD884C /* agentdb-memory.db-shm in Resources */ = {isa = PBXBuildFile; fileRef = 98ED190434E55082A98C7CE1 /* agentdb-memory.db-shm */; };
-		9AB364A676A4D589479ABC04 /* patterns.json in Resources */ = {isa = PBXBuildFile; fileRef = 60A410BBD1FB99702A35A3EC /* patterns.json */; };
 		C5191A0FB209E813207D46C3 /* KeyboardViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB16CF729056E7D5D6DE1DFC /* KeyboardViews.swift */; };
 		DB8ECC02C1EDE569235DE2B3 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52D6B8C5A0A77DECFF74BECA /* Theme.swift */; };
 		DD79D9AAB6361F35B8511355 /* TouchSurfaceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CD018750D0D95365A863F92 /* TouchSurfaceView.swift */; };
@@ -58,20 +49,11 @@
 		2C6FBF8D3743E149FBDBBEDB /* ruvector.db */ = {isa = PBXFileReference; path = ruvector.db; sourceTree = "<group>"; };
 		52D6B8C5A0A77DECFF74BECA /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		5A9E5E911A2C02630548E28A /* SteadyTapKeyboard.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = SteadyTapKeyboard.appex; sourceTree = BUILT_PRODUCTS_DIR; };
-		60A410BBD1FB99702A35A3EC /* patterns.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = patterns.json; sourceTree = "<group>"; };
-		638EE86F7875E939671AEACD /* stats.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = stats.json; sourceTree = "<group>"; };
-		79A77DDF0D1FB1BA48D3D98D /* stats.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = stats.json; sourceTree = "<group>"; };
 		7F684AFF0BF52AEE385B2956 /* HowTo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HowTo.swift; sourceTree = "<group>"; };
 		8C64A5321D831CBD7100B568 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
-		93A28D2D0E6CC75AF5922F08 /* state.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = state.json; sourceTree = "<group>"; };
-		98ED190434E55082A98C7CE1 /* agentdb-memory.db-shm */ = {isa = PBXFileReference; path = "agentdb-memory.db-shm"; sourceTree = "<group>"; };
-		9B0CDE20FF7F084267524B1A /* agentdb-memory.db */ = {isa = PBXFileReference; path = "agentdb-memory.db"; sourceTree = "<group>"; };
 		9CD018750D0D95365A863F92 /* TouchSurfaceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchSurfaceView.swift; sourceTree = "<group>"; };
 		9E077715F4B0861F5DE7DC5B /* SteadyTap.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = SteadyTap.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		A48A32B6BBCA93A00A96F893 /* state.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = state.json; sourceTree = "<group>"; };
-		AA57CD33294B266F27F842D1 /* ewc-fisher.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "ewc-fisher.json"; sourceTree = "<group>"; };
 		AE99C511F8DAEF5A50BEBBEA /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
-		B18B08E7FC226CC716DDE022 /* agentdb-memory.db-wal */ = {isa = PBXFileReference; path = "agentdb-memory.db-wal"; sourceTree = "<group>"; };
 		B610C81BCED90B9B7BE71C0E /* SteadyTapApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SteadyTapApp.swift; sourceTree = "<group>"; };
 		B9CABD97401DA6EE0B5EC72F /* KeyboardController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardController.swift; sourceTree = "<group>"; };
 		CD1D5B39028AA04DC09A4CBD /* TouchMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchMap.swift; sourceTree = "<group>"; };
@@ -91,26 +73,6 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		0150DACE44494320CDFC571D /* .swarm */ = {
-			isa = PBXGroup;
-			children = (
-				9B0CDE20FF7F084267524B1A /* agentdb-memory.db */,
-				98ED190434E55082A98C7CE1 /* agentdb-memory.db-shm */,
-				B18B08E7FC226CC716DDE022 /* agentdb-memory.db-wal */,
-				AA57CD33294B266F27F842D1 /* ewc-fisher.json */,
-			);
-			path = .swarm;
-			sourceTree = "<group>";
-		};
-		304FA682BA9F201727E48CB1 /* neural */ = {
-			isa = PBXGroup;
-			children = (
-				60A410BBD1FB99702A35A3EC /* patterns.json */,
-				79A77DDF0D1FB1BA48D3D98D /* stats.json */,
-			);
-			path = neural;
-			sourceTree = "<group>";
-		};
 		404AD8F476A14014DBC471C0 /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -120,28 +82,12 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		5853CCBAC604A40309183C21 /* neural */ = {
-			isa = PBXGroup;
-			children = (
-				638EE86F7875E939671AEACD /* stats.json */,
-			);
-			path = neural;
-			sourceTree = "<group>";
-		};
 		5DB4926090306461676E65F5 /* Packages */ = {
 			isa = PBXGroup;
 			children = (
 				1FA1337AE8E5268376EDF3A9 /* TouchEngine */,
 			);
 			path = Packages;
-			sourceTree = "<group>";
-		};
-		618F0137EF3D90A32A9C896C /* policy */ = {
-			isa = PBXGroup;
-			children = (
-				A48A32B6BBCA93A00A96F893 /* state.json */,
-			);
-			path = policy;
 			sourceTree = "<group>";
 		};
 		63921588C7D61312D84DA76B /* App */ = {
@@ -153,28 +99,8 @@
 				B610C81BCED90B9B7BE71C0E /* SteadyTapApp.swift */,
 				52D6B8C5A0A77DECFF74BECA /* Theme.swift */,
 				CD1D5B39028AA04DC09A4CBD /* TouchMap.swift */,
-				9556EFBC60C01C13F5A49BE3 /* .claude-flow */,
-				0150DACE44494320CDFC571D /* .swarm */,
 			);
 			path = App;
-			sourceTree = "<group>";
-		};
-		7880D395AC5FB0EA6403AF1A /* .claude-flow */ = {
-			isa = PBXGroup;
-			children = (
-				5853CCBAC604A40309183C21 /* neural */,
-				A70C9AAFF0CC796A61D2103E /* policy */,
-			);
-			path = ".claude-flow";
-			sourceTree = "<group>";
-		};
-		9556EFBC60C01C13F5A49BE3 /* .claude-flow */ = {
-			isa = PBXGroup;
-			children = (
-				304FA682BA9F201727E48CB1 /* neural */,
-				618F0137EF3D90A32A9C896C /* policy */,
-			);
-			path = ".claude-flow";
 			sourceTree = "<group>";
 		};
 		A107882875A7254D92DA84A9 = {
@@ -187,14 +113,6 @@
 			);
 			sourceTree = "<group>";
 		};
-		A70C9AAFF0CC796A61D2103E /* policy */ = {
-			isa = PBXGroup;
-			children = (
-				93A28D2D0E6CC75AF5922F08 /* state.json */,
-			);
-			path = policy;
-			sourceTree = "<group>";
-		};
 		BD8AF12FEC75B51AA1830CDB /* Keyboard */ = {
 			isa = PBXGroup;
 			children = (
@@ -203,7 +121,6 @@
 				FC3804E9315CE116C1197EBD /* KeyboardViewController.swift */,
 				DB16CF729056E7D5D6DE1DFC /* KeyboardViews.swift */,
 				9CD018750D0D95365A863F92 /* TouchSurfaceView.swift */,
-				7880D395AC5FB0EA6403AF1A /* .claude-flow */,
 			);
 			path = Keyboard;
 			sourceTree = "<group>";
@@ -236,7 +153,6 @@
 			buildConfigurationList = 8185A9FE6D8E997196770F24 /* Build configuration list for PBXNativeTarget "SteadyTapKeyboard" */;
 			buildPhases = (
 				2C83768CD83B2852CBAB16E8 /* Sources */,
-				1A4BE427410C9354C7CF2DB5 /* Resources */,
 				987CBE5CA05DADF29D601A85 /* Frameworks */,
 			);
 			buildRules = (
@@ -298,23 +214,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7690E365020A220E09CE0047 /* agentdb-memory.db in Resources */,
-				93ECB567AA865BCE4DDD884C /* agentdb-memory.db-shm in Resources */,
-				1EEF844DC773F8462DD1225E /* agentdb-memory.db-wal in Resources */,
-				3644ADF40F7007C57DE24EA0 /* ewc-fisher.json in Resources */,
-				9AB364A676A4D589479ABC04 /* patterns.json in Resources */,
 				7CD3E94A8A18E0D1EF10D918 /* ruvector.db in Resources */,
-				6937E129C69DF0258D04FBB4 /* state.json in Resources */,
-				3A102CACBBD5ED225BBAAD24 /* stats.json in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		1A4BE427410C9354C7CF2DB5 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				407269CE0C325E838AD412AC /* state.json in Resources */,
-				1B335E50F5E050732E645CF4 /* stats.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
