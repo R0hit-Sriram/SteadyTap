@@ -62,12 +62,22 @@ struct HomeView: View {
     @AppStorage("step.calibrated") private var calibrated = false
     @AppStorage("step.typed") private var typed = false
     @State private var path: [Route] = []
+    /// True once the big title has scrolled up under the bar, so the small one takes over.
+    @State private var titleTucked = false
     @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         NavigationStack(path: $path) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 32) {
+                    Text(appName)
+                        .font(.largeTitle.bold())
+                        .accessibilityAddTraits(.isHeader)
+                        .padding(.bottom, -14)
+                        .background(GeometryReader { g in
+                            Color.clear.preference(key: TitleTopKey.self,
+                                                   value: g.frame(in: .named("home")).maxY)
+                        })
                     HeroCard(action: next.title) { path.append(next.route) }
                     setup
                     explore
@@ -80,16 +90,19 @@ struct HomeView: View {
                 .padding(.horizontal, 16)
                 .padding(.bottom, 24)
             }
-            .background(Palette.background.ignoresSafeArea())
-            // A plain leading item, so the name stays small and left — a large title would
-            // slide to the middle of the bar as soon as the page scrolls.
-            .navigationTitle("")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Text(appName).font(.headline).lineLimit(1).fixedSize().accessibilityAddTraits(.isHeader)
+            .coordinateSpace(name: "home")
+            .onPreferenceChange(TitleTopKey.self) { top in
+                let tucked = top < 8
+                if tucked != titleTucked {
+                    withAnimation(.easeInOut(duration: 0.2)) { titleTucked = tucked }
                 }
             }
+            .background(Palette.background.ignoresSafeArea())
+            // The title lives in the page, so it stays big and on the left. Once it scrolls away a
+            // small one fades in, still on the left — a navigation large title would slide to the middle.
+            .navigationTitle("")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar { tuckedTitle }
             .navigationDestination(for: Route.self) { route in
                 switch route {
                 case .setup: SetupView()
@@ -100,6 +113,25 @@ struct HomeView: View {
                 }
             }
         }
+    }
+
+    /// The small left title that replaces the big one once it scrolls away. Plain text, no button chrome.
+    @ToolbarContentBuilder private var tuckedTitle: some ToolbarContent {
+        if #available(iOS 26, *) {
+            ToolbarItem(placement: .topBarLeading) { tuckedLabel }
+                .sharedBackgroundVisibility(.hidden)
+        } else {
+            ToolbarItem(placement: .topBarLeading) { tuckedLabel }
+        }
+    }
+
+    private var tuckedLabel: some View {
+        Text(appName)
+            .font(.headline)
+            .lineLimit(1)
+            .fixedSize()
+            .opacity(titleTucked ? 1 : 0)
+            .accessibilityHidden(!titleTucked)
     }
 
     private var doneCount: Int { [added, calibrated, typed].filter { $0 }.count }

@@ -86,6 +86,12 @@ struct GlassFinish: ViewModifier {
     }
 }
 
+/// Bottom edge of the page's big title, in the scroll view's own space.
+struct TitleTopKey: PreferenceKey {
+    static var defaultValue: CGFloat = .greatestFiniteMagnitude
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = min(value, nextValue()) }
+}
+
 /// Fades and lifts a view in after `delay`; instant with Reduce Motion.
 struct Rise: ViewModifier {
     let delay: Double

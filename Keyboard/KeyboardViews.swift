@@ -303,8 +303,14 @@ struct Panel<Content: View>: View {
             }
             .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
+            // A card on the grouped background, like the app. Plain systemBackground filled the
+            // whole keyboard, which in dark mode read as a black box rather than a panel.
+            .background(Color(uiColor: .secondarySystemGroupedBackground),
+                        in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
         }
-        .background(Color(uiColor: .systemBackground))
+        .background(Color(uiColor: .systemGroupedBackground))
     }
 }
 

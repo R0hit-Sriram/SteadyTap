@@ -2,44 +2,154 @@ import SwiftUI
 
 /// Animated how-to: a small iPhone on screen walks through the taps, one short caption per step.
 /// Built for people who would rather watch than read, so the words stay to a few per step.
-/// It plays by itself, can be paused, and can be stepped by hand.
+///
+/// The phone is drawn at real iPhone point sizes (393 wide, 44-point rows, 29-point icons, 20-point
+/// margins) and then scaled down as a whole, so the proportions match what the person is holding
+/// instead of being a loose sketch of a list.
 
 struct HowToStep {
     let caption: String
     let screen: MockScreen
 }
 
-/// What the little phone shows. A fixed set, so each step is one line to write.
-enum MockScreen: Equatable {
+enum MockScreen {
     /// Home screen with the Settings icon.
-    case settingsApp
-    /// A Settings-style list; `tap` is the row the finger is on.
-    case list(title: String, rows: [String], tap: Int, checked: Bool = false)
+    case homeScreen
+    /// A Settings page.
+    case settings(SettingsPage)
     /// A note with a text box the finger is tapping.
     case textBox
-    /// Our keyboard. `highlight` is the key to light up; `overlay` is any panel over it.
+    /// Our keyboard inside a note.
     case keyboard(highlight: String? = nil, overlay: KeyboardOverlay = .none, finger: KeyboardSpot = .none)
 }
 
-enum KeyboardOverlay: Equatable { case none, globeMenu, settingsMenu }
-enum KeyboardSpot: Equatable { case none, globe, gear, key, menuRow }
+enum KeyboardOverlay { case none, globeMenu, settingsMenu }
+enum KeyboardSpot { case none, globe, gear, key, menuRow }
+
+// MARK: - A Settings page, as iOS draws it
+
+struct SettingsRow {
+    var icon: (symbol: String, color: Color)?
+    var title: String
+    var value: String?
+    var accessory: Accessory = .chevron
+    var tint: Color?
+
+    enum Accessory { case chevron, none, toggleOn }
+}
+
+struct SettingsGroup {
+    var header: String?
+    var rows: [SettingsRow]
+}
+
+struct SettingsPage {
+    var back: String?
+    var title: String
+    var largeTitle = false
+    var search = false
+    var trailing: String?
+    var groups: [SettingsGroup]
+    /// Which row the finger rests on.
+    var tap: (group: Int, row: Int)?
+}
+
+private enum Pages {
+    static let grey = Color(.systemGray)
+    static let blue = Color(red: 0, green: 0.48, blue: 1)
+
+    static let root = SettingsPage(
+        title: "Settings", largeTitle: true, search: true,
+        groups: [SettingsGroup(rows: [
+            .init(icon: ("gearshape.fill", grey), title: "General"),
+            .init(icon: ("switch.2", grey), title: "Control Center"),
+            .init(icon: ("sun.max.fill", blue), title: "Display & Brightness"),
+            .init(icon: ("square.grid.2x2.fill", blue), title: "Home Screen & App Library"),
+            .init(icon: ("accessibility", blue), title: "Accessibility"),
+        ])],
+        tap: (0, 0))
+
+    static let general = SettingsPage(
+        back: "Settings", title: "General",
+        groups: [
+            SettingsGroup(rows: [
+                .init(title: "About"),
+                .init(title: "Software Update"),
+            ]),
+            SettingsGroup(rows: [
+                .init(title: "Date & Time"),
+                .init(title: "Keyboard"),
+                .init(title: "Fonts"),
+                .init(title: "Language & Region"),
+                .init(title: "Dictionary"),
+            ]),
+        ],
+        tap: (1, 1))
+
+    static let keyboard = SettingsPage(
+        back: "General", title: "Keyboard",
+        groups: [
+            SettingsGroup(rows: [
+                .init(title: "Keyboards", value: "2"),
+                .init(title: "Text Replacement"),
+                .init(title: "One Handed Keyboard", value: "Off"),
+            ]),
+            SettingsGroup(header: "ALL KEYBOARDS", rows: [
+                .init(title: "Auto-Capitalization", accessory: .toggleOn),
+                .init(title: "Auto-Correction", accessory: .toggleOn),
+                .init(title: "Check Spelling", accessory: .toggleOn),
+            ]),
+        ],
+        tap: (0, 0))
+
+    static let keyboards = SettingsPage(
+        back: "Keyboard", title: "Keyboards", trailing: "Edit",
+        groups: [SettingsGroup(rows: [
+            .init(title: "English (US)", accessory: .none),
+            .init(title: "Emoji", accessory: .none),
+            .init(title: "Add New Keyboard…", tint: blue),
+        ])],
+        tap: (0, 2))
+
+    static let addKeyboard = SettingsPage(
+        back: "Keyboards", title: "Add New Keyboard",
+        groups: [
+            SettingsGroup(header: "THIRD-PARTY KEYBOARDS", rows: [
+                .init(title: appName, accessory: .none),
+            ]),
+            SettingsGroup(header: "OTHER IPHONE KEYBOARDS", rows: [
+                .init(title: "Afrikaans", accessory: .none),
+                .init(title: "Arabic", accessory: .none),
+            ]),
+        ],
+        tap: (0, 0))
+
+    static let done = SettingsPage(
+        back: "Keyboard", title: "Keyboards", trailing: "Edit",
+        groups: [SettingsGroup(rows: [
+            .init(title: "English (US)", accessory: .none),
+            .init(title: "Emoji", accessory: .none),
+            .init(title: appName, accessory: .none),
+            .init(title: "Add New Keyboard…", tint: blue),
+        ])])
+}
 
 enum HowTo {
     /// Turning the keyboard on in Settings.
     static let enableKeyboard: [HowToStep] = [
-        .init(caption: "Open Settings", screen: .settingsApp),
-        .init(caption: "Tap General", screen: .list(title: "Settings", rows: ["General", "Accessibility", "Privacy"], tap: 0)),
-        .init(caption: "Tap Keyboard", screen: .list(title: "General", rows: ["About", "Keyboard", "Language"], tap: 1)),
-        .init(caption: "Tap Keyboards", screen: .list(title: "Keyboard", rows: ["Keyboards", "Text Replacement"], tap: 0)),
-        .init(caption: "Tap Add New Keyboard", screen: .list(title: "Keyboards", rows: ["English", "Emoji", "Add New Keyboard…"], tap: 2)),
-        .init(caption: "Choose \(appName)", screen: .list(title: "Add Keyboard", rows: [appName, "Other keyboards"], tap: 0, checked: true)),
-        .init(caption: "Done. Leave Full Access off.", screen: .list(title: "Keyboards", rows: ["English", "Emoji", appName], tap: 2, checked: true)),
+        .init(caption: "Open Settings", screen: .homeScreen),
+        .init(caption: "Tap General", screen: .settings(Pages.root)),
+        .init(caption: "Tap Keyboard", screen: .settings(Pages.general)),
+        .init(caption: "Tap Keyboards", screen: .settings(Pages.keyboard)),
+        .init(caption: "Tap Add New Keyboard", screen: .settings(Pages.keyboards)),
+        .init(caption: "Choose \(appName)", screen: .settings(Pages.addKeyboard)),
+        .init(caption: "Done. Leave Full Access off.", screen: .settings(Pages.done)),
     ]
 
     /// Teaching it your touch, from inside any app.
     static let calibrate: [HowToStep] = [
         .init(caption: "Tap a text box", screen: .textBox),
-        .init(caption: "Hold the globe key", screen: .keyboard(overlay: .none, finger: .globe)),
+        .init(caption: "Hold the globe key", screen: .keyboard(finger: .globe)),
         .init(caption: "Choose \(appName)", screen: .keyboard(overlay: .globeMenu, finger: .menuRow)),
         .init(caption: "Tap the gear", screen: .keyboard(finger: .gear)),
         .init(caption: "Choose Calibrate", screen: .keyboard(overlay: .settingsMenu, finger: .menuRow)),
@@ -56,8 +166,7 @@ struct HowToView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var index = 0
     @State private var playing = true
-    // Ticks often; a step changes every `dwell` ticks so pausing is instant.
-    private let tick = Timer.publish(every: 2.8, on: .main, in: .common).autoconnect()
+    private let tick = Timer.publish(every: 3.0, on: .main, in: .common).autoconnect()
 
     var body: some View {
         VStack(spacing: 14) {
@@ -131,11 +240,22 @@ struct HowToView: View {
     }
 }
 
-// MARK: - The little phone
+// MARK: - The little phone, drawn at real iPhone sizes and scaled down as a whole
 
-private enum M {
-    static let width: CGFloat = 206, height: CGFloat = 368
-    static let rowH: CGFloat = 40, headerH: CGFloat = 32
+/// Real iPhone metrics, in points.
+enum IOS {
+    static let width: CGFloat = 393
+    static let shown: CGFloat = 700      // how much of the screen's height the card shows
+    static let scale: CGFloat = 0.56
+    static let statusBar: CGFloat = 54
+    static let navBar: CGFloat = 44
+    static let largeTitle: CGFloat = 52
+    static let search: CGFloat = 52
+    static let row: CGFloat = 44
+    static let margin: CGFloat = 20
+    static let groupGap: CGFloat = 35
+    static let headerText: CGFloat = 30
+    static let corner: CGFloat = 10
 }
 
 struct PhoneScreen: View {
@@ -143,34 +263,38 @@ struct PhoneScreen: View {
 
     var body: some View {
         content
-            .frame(width: M.width, height: M.height)
-            .background(Color(.systemBackground))
-            .clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 26, style: .continuous)
-                .strokeBorder(Color(.separator), lineWidth: 3))
-            .shadow(color: .black.opacity(0.12), radius: 10, y: 5)
+            .frame(width: IOS.width, height: IOS.shown, alignment: .top)
+            .background(Color(.systemGroupedBackground))
+            .clipShape(RoundedRectangle(cornerRadius: 46, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 46, style: .continuous)
+                .strokeBorder(Color(.separator), lineWidth: 6))
+            .scaleEffect(IOS.scale)
+            .frame(width: IOS.width * IOS.scale, height: IOS.shown * IOS.scale)
+            .shadow(color: .black.opacity(0.14), radius: 10, y: 5)
     }
 
     @ViewBuilder private var content: some View {
         switch screen {
-        case .settingsApp: SettingsAppScreen()
-        case let .list(title, rows, tap, checked): ListScreen(title: title, rows: rows, tap: tap, checked: checked)
-        case .textBox: TextBoxScreen()
-        case let .keyboard(highlight, overlay, finger): KeyboardScreen(highlight: highlight, overlay: overlay, finger: finger)
+        case .homeScreen: HomeScreenView()
+        case let .settings(page): SettingsPageView(page: page)
+        case .textBox: NoteView(keyboard: nil, finger: .none, highlight: nil, overlay: .none)
+        case let .keyboard(highlight, overlay, finger):
+            NoteView(keyboard: true, finger: finger, highlight: highlight, overlay: overlay)
         }
     }
 }
 
-/// Pulsing ring that marks where to tap.
+/// Pulsing ring that marks where to tap. Sized in real iPhone points.
 struct FingerDot: View {
+    var size: CGFloat = 54
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var pulse = false
 
     var body: some View {
         Circle()
             .fill(Palette.accent.opacity(0.22))
-            .overlay(Circle().strokeBorder(Palette.accent, lineWidth: 2.5))
-            .frame(width: 36, height: 36)
+            .overlay(Circle().strokeBorder(Palette.accent, lineWidth: 4))
+            .frame(width: size, height: size)
             .scaleEffect(pulse ? 0.78 : 1)
             .onAppear {
                 guard !reduceMotion else { return }
@@ -180,179 +304,337 @@ struct FingerDot: View {
     }
 }
 
-private struct SettingsAppScreen: View {
+private struct StatusBar: View {
     var body: some View {
-        VStack(spacing: 10) {
+        HStack {
+            Text("9:41").font(.system(size: 15, weight: .semibold))
+            Spacer()
+            HStack(spacing: 5) {
+                Image(systemName: "cellularbars")
+                Image(systemName: "wifi")
+                Image(systemName: "battery.75")
+            }
+            .font(.system(size: 14))
+        }
+        .padding(.horizontal, 28)
+        .frame(height: IOS.statusBar, alignment: .bottom)
+        .padding(.bottom, 4)
+    }
+}
+
+private struct HomeScreenView: View {
+    var body: some View {
+        VStack(spacing: 0) {
+            StatusBar()
             Spacer()
             ZStack {
                 Image(systemName: "gearshape.fill")
-                    .font(.system(size: 34))
+                    .font(.system(size: 46))
                     .foregroundStyle(.white)
-                    .frame(width: 66, height: 66)
+                    .frame(width: 88, height: 88)
                     .background(LinearGradient(colors: [Color(.systemGray2), Color(.systemGray)],
                                                startPoint: .top, endPoint: .bottom),
-                                in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-                FingerDot().offset(x: 18, y: 20)
+                                in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+                FingerDot().offset(x: 26, y: 28)
             }
-            Text("Settings").font(.caption)
+            Text("Settings").font(.system(size: 14)).padding(.top, 8)
             Spacer()
         }
         .frame(maxWidth: .infinity)
     }
 }
 
-private struct ListScreen: View {
-    let title: String
-    let rows: [String]
-    let tap: Int
-    let checked: Bool
+/// A Settings page: status bar, navigation bar, then inset-grouped rows — iOS metrics throughout.
+private struct SettingsPageView: View {
+    let page: SettingsPage
 
     var body: some View {
         VStack(spacing: 0) {
-            Text(title)
-                .font(.footnote.weight(.semibold))
-                .frame(maxWidth: .infinity, minHeight: M.headerH)
-                .background(Color(.secondarySystemBackground))
-            ForEach(rows.indices, id: \.self) { i in
-                HStack(spacing: 6) {
-                    Text(rows[i]).font(.subheadline).lineLimit(1)
-                    Spacer()
-                    Image(systemName: checked && i == tap ? "checkmark" : "chevron.right")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(checked && i == tap ? Palette.accent : Color(.tertiaryLabel))
+            StatusBar()
+            navBar
+            if page.largeTitle {
+                Text(page.title)
+                    .font(.system(size: 34, weight: .bold))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, IOS.margin)
+                    .frame(height: IOS.largeTitle, alignment: .bottom)
+            }
+            if page.search { searchField }
+            ForEach(page.groups.indices, id: \.self) { g in
+                group(page.groups[g], index: g)
+            }
+            Spacer(minLength: 0)
+        }
+        .overlay(alignment: .topLeading) { finger }
+    }
+
+    private var navBar: some View {
+        ZStack {
+            Text(page.largeTitle ? "" : page.title).font(.system(size: 17, weight: .semibold))
+            HStack {
+                if let back = page.back {
+                    HStack(spacing: 5) {
+                        Image(systemName: "chevron.left").font(.system(size: 17, weight: .semibold))
+                        Text(back).font(.system(size: 17))
+                    }
+                    .foregroundStyle(Pages.blue)
                 }
-                .padding(.horizontal, 14)
-                .frame(height: M.rowH)
-                .background(i == tap ? Palette.accent.opacity(0.1) : .clear)
-                Divider().padding(.leading, 14)
+                Spacer()
+                if let trailing = page.trailing {
+                    Text(trailing).font(.system(size: 17)).foregroundStyle(Pages.blue)
+                }
             }
+            .padding(.horizontal, IOS.margin - 8)
+        }
+        .frame(height: IOS.navBar)
+    }
+
+    private var searchField: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "magnifyingglass")
+            Text("Search")
             Spacer()
         }
-        .overlay(alignment: .topTrailing) {
-            FingerDot().offset(x: -30, y: M.headerH + M.rowH * CGFloat(tap) + M.rowH / 2 - 18)
+        .font(.system(size: 17))
+        .foregroundStyle(.secondary)
+        .padding(.horizontal, 8)
+        .frame(height: 36)
+        .background(Color(.tertiarySystemFill), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .padding(.horizontal, IOS.margin)
+        .frame(height: IOS.search)
+    }
+
+    private func group(_ group: SettingsGroup, index: Int) -> some View {
+        VStack(spacing: 0) {
+            if let header = group.header {
+                Text(header)
+                    .font(.system(size: 13))
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, IOS.margin + 12)
+                    .frame(height: IOS.headerText, alignment: .bottom)
+                    .padding(.bottom, 6)
+            }
+            VStack(spacing: 0) {
+                ForEach(group.rows.indices, id: \.self) { r in
+                    rowView(group.rows[r])
+                    if r < group.rows.count - 1 {
+                        Divider().padding(.leading, group.rows[r].icon == nil ? 16 : 57)
+                    }
+                }
+            }
+            .background(Color(.secondarySystemGroupedBackground),
+                        in: RoundedRectangle(cornerRadius: IOS.corner, style: .continuous))
+            .padding(.horizontal, IOS.margin)
         }
+        .padding(.top, index == 0 ? (page.search ? 10 : IOS.groupGap) : IOS.groupGap - (group.header == nil ? 0 : 10))
+    }
+
+    private func rowView(_ row: SettingsRow) -> some View {
+        HStack(spacing: 12) {
+            if let icon = row.icon {
+                Image(systemName: icon.symbol)
+                    .font(.system(size: 16))
+                    .foregroundStyle(.white)
+                    .frame(width: 29, height: 29)
+                    .background(icon.color, in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+            }
+            Text(row.title)
+                .font(.system(size: 17))
+                .foregroundStyle(row.tint ?? .primary)
+                .lineLimit(1)
+            Spacer(minLength: 4)
+            if let value = row.value {
+                Text(value).font(.system(size: 17)).foregroundStyle(.secondary)
+            }
+            switch row.accessory {
+            case .chevron:
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(Color(.tertiaryLabel))
+            case .toggleOn:
+                Capsule().fill(Color.green).frame(width: 51, height: 31)
+                    .overlay(Circle().fill(.white).padding(2), alignment: .trailing)
+            case .none:
+                EmptyView()
+            }
+        }
+        .padding(.horizontal, 16)
+        .frame(height: IOS.row)
+    }
+
+    /// Where the tapped row sits, measured down the page in the same metrics used to lay it out.
+    @ViewBuilder private var finger: some View {
+        if let tap = page.tap {
+            FingerDot()
+                .offset(x: IOS.width - 96, y: rowCentre(tap) - 27)
+        }
+    }
+
+    private func rowCentre(_ tap: (group: Int, row: Int)) -> CGFloat {
+        var y = IOS.statusBar + 4 + IOS.navBar
+        if page.largeTitle { y += IOS.largeTitle }
+        if page.search { y += IOS.search }
+        for g in 0 ..< tap.group {
+            y += topPad(g) + headerHeight(g) + CGFloat(page.groups[g].rows.count) * IOS.row
+        }
+        y += topPad(tap.group) + headerHeight(tap.group) + CGFloat(tap.row) * IOS.row + IOS.row / 2
+        return y
+    }
+
+    private func topPad(_ g: Int) -> CGFloat {
+        g == 0 ? (page.search ? 10 : IOS.groupGap) : IOS.groupGap - (page.groups[g].header == nil ? 0 : 10)
+    }
+
+    private func headerHeight(_ g: Int) -> CGFloat {
+        page.groups[g].header == nil ? 0 : IOS.headerText + 6
     }
 }
 
-private struct TextBoxScreen: View {
+/// A note with our keyboard at the bottom, at real keyboard proportions.
+private struct NoteView: View {
+    let keyboard: Bool?
+    let finger: KeyboardSpot
+    let highlight: String?
+    let overlay: KeyboardOverlay
+
     var body: some View {
         VStack(spacing: 0) {
-            Text("Notes")
-                .font(.footnote.weight(.semibold))
-                .frame(maxWidth: .infinity, minHeight: M.headerH)
-                .background(Color(.secondarySystemBackground))
-            ZStack(alignment: .topLeading) {
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .strokeBorder(Palette.accent, lineWidth: 2)
-                    .frame(height: 76)
-                Text("Tap here")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .padding(10)
-                FingerDot().offset(x: 54, y: 26)
+            StatusBar()
+            ZStack {
+                Text("Notes").font(.system(size: 17, weight: .semibold))
+                HStack {
+                    HStack(spacing: 5) {
+                        Image(systemName: "chevron.left").font(.system(size: 17, weight: .semibold))
+                        Text("Folders").font(.system(size: 17))
+                    }
+                    .foregroundStyle(Pages.blue)
+                    Spacer()
+                }
+                .padding(.horizontal, 12)
             }
-            .padding(14)
-            Spacer()
+            .frame(height: IOS.navBar)
+
+            if keyboard == nil {
+                ZStack(alignment: .topLeading) {
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .strokeBorder(Palette.accent, lineWidth: 3)
+                        .frame(height: 120)
+                    Text("Tap here to type")
+                        .font(.system(size: 17))
+                        .foregroundStyle(.secondary)
+                        .padding(16)
+                    FingerDot().offset(x: 96, y: 36)
+                }
+                .padding(IOS.margin)
+            } else {
+                VStack(alignment: .leading, spacing: 10) {
+                    Capsule().fill(Color(.quaternaryLabel)).frame(width: 210, height: 11)
+                    Capsule().fill(Color(.quaternaryLabel)).frame(width: 140, height: 11)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(IOS.margin)
+            }
+            Spacer(minLength: 0)
+            if keyboard != nil { KeyboardMock(highlight: highlight, overlay: overlay, finger: finger) }
         }
     }
 }
 
-private struct KeyboardScreen: View {
+private struct KeyboardMock: View {
     let highlight: String?
     let overlay: KeyboardOverlay
     let finger: KeyboardSpot
 
     private let rows = ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"]
+    private let keyW: CGFloat = 33, keyH: CGFloat = 42, gap: CGFloat = 6
 
     var body: some View {
         VStack(spacing: 0) {
-            Text("Notes")
-                .font(.footnote.weight(.semibold))
-                .frame(maxWidth: .infinity, minHeight: M.headerH)
-                .background(Color(.secondarySystemBackground))
-            // A line of typed text, so the little phone reads as a real app.
-            VStack(alignment: .leading, spacing: 6) {
-                ForEach(0 ..< 2, id: \.self) { i in
-                    Capsule().fill(Color(.quaternaryLabel))
-                        .frame(width: i == 0 ? 120 : 76, height: 7)
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(14)
-            Spacer(minLength: 0)
-            if overlay == .globeMenu { menu(rows: [appName, "English"], highlightFirst: true) }
-            if overlay == .settingsMenu { menu(rows: ["Calibrate", "Typing comparison"], highlightFirst: true) }
+            if overlay == .globeMenu { menu(rows: [appName, "English (US)", "Emoji"]) }
+            if overlay == .settingsMenu { menu(rows: ["Calibrate", "Typing comparison"]) }
             keyboard
         }
     }
 
-    private func menu(rows: [String], highlightFirst: Bool) -> some View {
+    private func menu(rows: [String]) -> some View {
         VStack(spacing: 0) {
             ForEach(rows.indices, id: \.self) { i in
                 Text(rows[i])
-                    .font(.subheadline.weight(i == 0 && highlightFirst ? .semibold : .regular))
-                    .frame(maxWidth: .infinity, minHeight: 36)
-                    .background(i == 0 && highlightFirst ? Palette.accent.opacity(0.14) : .clear)
+                    .font(.system(size: 17, weight: i == 0 ? .semibold : .regular))
+                    .frame(maxWidth: .infinity, minHeight: 44)
+                    .background(i == 0 ? Palette.accent.opacity(0.15) : .clear)
                 if i < rows.count - 1 { Divider() }
             }
         }
-        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-        .overlay(alignment: .top) { if finger == .menuRow { FingerDot().offset(y: 2) } }
-        .padding(.horizontal, 20)
-        .padding(.bottom, 8)
+        .background(Color(.secondarySystemGroupedBackground),
+                    in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay(alignment: .top) { if finger == .menuRow { FingerDot().offset(y: -5) } }
+        .padding(.horizontal, 40)
+        .padding(.bottom, 10)
     }
 
     private var keyboard: some View {
-        VStack(spacing: 5) {
-            // Our toolbar: gear on the left.
-            HStack(spacing: 6) {
+        VStack(spacing: 9) {
+            HStack(spacing: 8) {
                 ZStack {
                     Image(systemName: "gearshape")
-                        .font(.footnote)
-                        .frame(width: 26, height: 22)
-                        .background(finger == .gear ? Palette.accent.opacity(0.18) : .clear,
-                                    in: RoundedRectangle(cornerRadius: 5, style: .continuous))
-                    if finger == .gear { FingerDot().scaleEffect(0.8) }
+                        .font(.system(size: 20))
+                        .frame(width: 44, height: 36)
+                        .background(finger == .gear ? Palette.accent.opacity(0.2) : .clear,
+                                    in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    if finger == .gear { FingerDot(size: 44) }
                 }
                 Spacer()
-                Image(systemName: "arrow.uturn.backward").font(.footnote).foregroundStyle(.tertiary)
+                Image(systemName: "arrow.uturn.backward").font(.system(size: 20)).foregroundStyle(.tertiary)
             }
-            .padding(.horizontal, 8)
-            .frame(height: 24)
+            .padding(.horizontal, 6)
+            .frame(height: 40)
 
             ForEach(rows.indices, id: \.self) { r in
-                HStack(spacing: 3) {
+                HStack(spacing: gap) {
                     ForEach(Array(rows[r]), id: \.self) { ch in
                         let on = highlight == String(ch)
                         ZStack {
-                            RoundedRectangle(cornerRadius: 4, style: .continuous)
-                                .fill(on ? Palette.accent : Color(.secondarySystemBackground))
-                                .frame(width: 16, height: 24)
+                            RoundedRectangle(cornerRadius: 5, style: .continuous)
+                                .fill(on ? Palette.accent : Color(.secondarySystemGroupedBackground))
+                                .frame(width: keyW, height: keyH)
                             Text(String(ch))
-                                .font(.system(size: 9, weight: on ? .bold : .regular))
+                                .font(.system(size: 20, weight: on ? .bold : .regular))
                                 .foregroundStyle(on ? .white : .primary)
-                            if on, finger == .key { FingerDot().scaleEffect(0.72) }
+                            if on, finger == .key { FingerDot(size: 46) }
                         }
                     }
                 }
             }
 
-            // Bottom row with the globe.
-            HStack(spacing: 3) {
-                RoundedRectangle(cornerRadius: 4).fill(Color(.secondarySystemBackground)).frame(width: 24, height: 24)
+            HStack(spacing: gap) {
+                key(width: 48, label: "123")
                 ZStack {
-                    RoundedRectangle(cornerRadius: 4, style: .continuous)
-                        .fill(finger == .globe ? Palette.accent.opacity(0.25) : Color(.secondarySystemBackground))
-                        .frame(width: 22, height: 24)
-                    Image(systemName: "globe").font(.system(size: 10))
-                    if finger == .globe { FingerDot().scaleEffect(0.72) }
+                    RoundedRectangle(cornerRadius: 5, style: .continuous)
+                        .fill(finger == .globe ? Palette.accent.opacity(0.25) : Color(.secondarySystemGroupedBackground))
+                        .frame(width: 42, height: keyH)
+                    Image(systemName: "globe").font(.system(size: 18))
+                    if finger == .globe { FingerDot(size: 46) }
                 }
-                RoundedRectangle(cornerRadius: 4).fill(Color(.secondarySystemBackground)).frame(height: 24)
-                RoundedRectangle(cornerRadius: 4).fill(Color(.secondarySystemBackground)).frame(width: 32, height: 24)
+                RoundedRectangle(cornerRadius: 5, style: .continuous)
+                    .fill(Color(.secondarySystemGroupedBackground))
+                    .frame(height: keyH)
+                key(width: 62, label: "return")
             }
         }
-        .padding(8)
+        .padding(.horizontal, 6)
+        .padding(.vertical, 10)
         .background(Color(.tertiarySystemBackground))
+    }
+
+    private func key(width: CGFloat, label: String) -> some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 5, style: .continuous)
+                .fill(Color(.secondarySystemGroupedBackground))
+                .frame(width: width, height: keyH)
+            Text(label).font(.system(size: 14))
+        }
     }
 }
 
