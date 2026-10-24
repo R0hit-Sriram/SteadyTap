@@ -323,14 +323,19 @@ struct Panel<Content: View>: View {
             }
             .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
-            // A card on the grouped background, like the app. Plain systemBackground filled the
-            // whole keyboard, which in dark mode read as a black box rather than a panel.
-            .background(Color(uiColor: .secondarySystemGroupedBackground),
-                        in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-            .padding(.horizontal, 10)
+            // A raised card sitting in the keyboard, the way iOS panels look.
+            // Both colours are picked so the card stays lighter than what's behind it in either
+            // theme: grouped backgrounds are pure black in dark mode, which is what made this
+            // panel read as a black square.
+            .background(Color(uiColor: .tertiarySystemBackground),
+                        in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .strokeBorder(Color(uiColor: .separator), lineWidth: 0.5))
+            .shadow(color: .black.opacity(0.12), radius: 5, y: 2)
+            .padding(.horizontal, 8)
             .padding(.vertical, 8)
         }
-        .background(Color(uiColor: .systemGroupedBackground))
+        .background(Color(uiColor: .systemGray6))
     }
 }
 
