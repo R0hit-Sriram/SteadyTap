@@ -64,40 +64,45 @@ struct SurfaceView: UIViewRepresentable {
 
 // MARK: - Toolbar
 
-/// Toolbar button that still counts when the finger slides on the way up.
-/// A plain Button cancels once the touch drifts a few points, which for a shaky hand meant tapping
-/// ⚙︎ two or three times before it opened.
+/// Toolbar button. Touches go through `tapTarget`, not a SwiftUI gesture — see TapTarget.swift.
 struct BarButton: View {
     let title: String
     let systemImage: String
     let action: () -> Void
     @Environment(\.isEnabled) private var isEnabled
-    @State private var pressed = false
-
-    /// How far the finger may wander and still count, measured from where it went down.
-    private static let slop: CGFloat = 60
 
     var body: some View {
         Image(systemName: systemImage)
             .font(.title2)
             .frame(width: 52, height: 44)
-            .background(pressed ? Color.secondary.opacity(0.3) : .clear,
-                        in: RoundedRectangle(cornerRadius: 8, style: .continuous))
             .opacity(isEnabled ? 1 : 0.35)
-            .contentShape(Rectangle())
-            .gesture(
-                DragGesture(minimumDistance: 0)
-                    .onChanged { _ in if !pressed { pressed = true } }
-                    .onEnded { v in
-                        pressed = false
-                        let moved = max(abs(v.location.x - v.startLocation.x), abs(v.location.y - v.startLocation.y))
-                        if moved <= Self.slop { action() }
-                    }
-            )
-            .accessibilityElement()
-            .accessibilityLabel(title)
-            .accessibilityAddTraits(.isButton)
-            .accessibilityAction { action() }
+            .tapTarget(title, action: action)
+    }
+}
+
+/// Text button for the bars that redraw while someone is typing. Same UIKit touch handling.
+struct PillButton: View {
+    let title: String
+    var prominent = false
+    let action: () -> Void
+    @Environment(\.isEnabled) private var isEnabled
+
+    init(_ title: String, prominent: Bool = false, action: @escaping () -> Void) {
+        self.title = title
+        self.prominent = prominent
+        self.action = action
+    }
+
+    var body: some View {
+        Text(title)
+            .font(.callout.weight(prominent ? .semibold : .regular))
+            .foregroundStyle(prominent ? Color.white : Color.accentColor)
+            .padding(.horizontal, 14)
+            .frame(minHeight: 44)
+            .background(prominent ? Color.accentColor : Color(.tertiarySystemFill),
+                        in: Capsule())
+            .opacity(isEnabled ? 1 : 0.35)
+            .tapTarget(title, cornerRadius: 22, action: action)
     }
 }
 
@@ -121,22 +126,23 @@ struct ChoiceStrip: View {
         let s = c.activeSession
         if let choice = s.pendingChoice {
             HStack(spacing: 8) {
-                Button { c.acceptChoice() } label: {
-                    Text(choice.inserted).font(.title2.bold()).frame(maxWidth: .infinity, minHeight: 44)
-                }
-                .buttonStyle(.borderedProminent)
-                .accessibilityLabel("Keep \(choice.inserted)")
-                Button { c.chooseAlternative() } label: {
-                    Text(choice.alternative).font(.title2.bold()).frame(maxWidth: .infinity, minHeight: 44)
-                }
-                .buttonStyle(.bordered)
-                .accessibilityLabel("Change to \(choice.alternative)")
+                Text(choice.inserted)
+                    .font(.title2.bold())
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity, minHeight: 44)
+                    .background(Color.accentColor, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                    .tapTarget("Keep \(choice.inserted)") { c.acceptChoice() }
+                Text(choice.alternative)
+                    .font(.title2.bold())
+                    .frame(maxWidth: .infinity, minHeight: 44)
+                    .background(Color(.tertiarySystemFill), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                    .tapTarget("Change to \(choice.alternative)") { c.chooseAlternative() }
             }
         } else if let extra = s.pendingExtra {
-            Button { c.keepExtra() } label: {
-                Text("Quick extra tap ignored — add “\(extra)”").frame(maxWidth: .infinity, minHeight: 44)
-            }
-            .buttonStyle(.bordered)
+            Text("Quick extra tap ignored — add “\(extra)”")
+                .frame(maxWidth: .infinity, minHeight: 44)
+                .background(Color(.tertiarySystemFill), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .tapTarget("Add \(extra)") { c.keepExtra() }
         }
     }
 }
@@ -192,14 +198,10 @@ struct SuggestionBar: View {
     var body: some View {
         let s = c.session
         if let fix = s.lastWordFix {
-            Button { c.revertWordFix() } label: {
-                Label("Change back to “\(fix.typed)”", systemImage: "arrow.uturn.backward")
-                    .font(.body).lineLimit(1).minimumScaleFactor(0.7)
-                    .frame(maxWidth: .infinity, minHeight: 44)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .accessibilityHint("Undoes the autocorrection")
+            Label("Change back to “\(fix.typed)”", systemImage: "arrow.uturn.backward")
+                .font(.body).lineLimit(1).minimumScaleFactor(0.7)
+                .frame(maxWidth: .infinity, minHeight: 44)
+                .tapTarget("Change back to \(fix.typed)", hint: "Undoes the autocorrection") { c.revertWordFix() }
         } else {
             let w = s.suggestions
             let middle = w.autocorrect ?? w.others.first
@@ -222,17 +224,13 @@ struct SuggestionBar: View {
     @ViewBuilder
     private func slot(_ title: String?, word: String?, highlighted: Bool = false, hint: String? = nil) -> some View {
         if let title, let word {
-            Button { c.acceptSuggestion(word) } label: {
-                Text(title)
-                    .font(highlighted ? .body.weight(.semibold) : .body)
-                    .lineLimit(1).minimumScaleFactor(0.6)
-                    .padding(.horizontal, 6)
-                    .frame(maxWidth: .infinity, minHeight: 44)
-                    .background(highlighted ? Color(.systemGray5) : .clear, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .accessibilityHint(hint ?? "")
+            Text(title)
+                .font(highlighted ? .body.weight(.semibold) : .body)
+                .lineLimit(1).minimumScaleFactor(0.6)
+                .padding(.horizontal, 6)
+                .frame(maxWidth: .infinity, minHeight: 44)
+                .background(highlighted ? Color(.systemGray5) : .clear, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                .tapTarget(word, cornerRadius: 8, hint: hint) { c.acceptSuggestion(word) }
         } else {
             Color.clear.frame(maxWidth: .infinity, minHeight: 44)
         }
@@ -270,14 +268,14 @@ struct CalibrationBar: View {
                 if cal.isOnBreak {
                     Text("Set \(cal.setIndex) of \(cal.sets.count) done. Rest as long as you like.")
                         .font(.footnote).frame(maxWidth: .infinity, alignment: .leading)
-                    Button("Save & stop") { c.finishCalibration() }
-                    Button("Continue") { c.continueCalibration() }.buttonStyle(.borderedProminent)
+                    PillButton("Save & stop") { c.finishCalibration() }
+                    PillButton("Continue", prominent: true) { c.continueCalibration() }
                 } else {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Tap the blue key. No need to hurry.").font(.callout.bold())
                         ProgressView(value: Double(cal.completedTargets), total: Double(cal.totalTargets))
                     }
-                    Button(cal.setIndex == 0 ? "Cancel" : "Save & stop") {
+                    PillButton(cal.setIndex == 0 ? "Cancel" : "Save & stop") {
                         cal.setIndex == 0 ? c.cancelCalibration() : c.finishCalibration()
                     }
                 }
@@ -297,8 +295,8 @@ struct ComparisonBar: View {
                     Text("Test \(run.trialIndex + 1) of \(run.totalTrials) · \(run.currentMode.title)")
                         .font(.footnote).foregroundStyle(.secondary)
                     Spacer()
-                    Button("Undo") { c.undo() }.disabled(!run.session.canUndo)
-                    Button("Done") { c.finishPhrase() }.buttonStyle(.borderedProminent)
+                    PillButton("Undo") { c.undo() }.disabled(!run.session.canUndo)
+                    PillButton("Done", prominent: true) { c.finishPhrase() }
                 }
                 Text(run.currentPhrase).font(.title3.bold())
                 if run.session.pendingChoice != nil || run.session.pendingExtra != nil {
@@ -454,7 +452,7 @@ struct CalibrationDoneView: View {
                 Text("Checked on taps from this one calibration session, so everyday typing may score lower. These numbers are not a medical measurement.")
                     .font(.footnote).foregroundStyle(.secondary)
             }
-            Button("Start typing") { c.screen = .typing }.buttonStyle(.borderedProminent).disabled(c.isFitting)
+            PillButton("Start typing", prominent: true) { c.screen = .typing }.disabled(c.isFitting)
         }
     }
 }
@@ -484,13 +482,13 @@ struct NavigationLinkLike: View {
     let action: () -> Void
 
     var body: some View {
-        Button(action: action) {
-            HStack {
-                Text(title)
-                Spacer()
-                Image(systemName: "chevron.right").foregroundStyle(.secondary)
-            }
+        HStack {
+            Text(title)
+            Spacer()
+            Image(systemName: "chevron.right").foregroundStyle(.secondary)
         }
+        .frame(minHeight: 44)
+        .tapTarget(title, action: action)
     }
 }
 
@@ -617,21 +615,23 @@ struct EmojiView: View {
             ScrollView {
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 8), spacing: 4) {
                     ForEach(Self.emoji, id: \.self) { e in
-                        Button { c.insertEmoji(e) } label: {
-                            Text(e).font(.system(size: 30)).frame(maxWidth: .infinity, minHeight: 48)
-                        }
-                        .accessibilityLabel(e)
+                        Text(e)
+                            .font(.system(size: 30))
+                            .frame(maxWidth: .infinity, minHeight: 48)
+                            .tapTarget(e, cornerRadius: 8) { c.insertEmoji(e) }
                     }
                 }
                 .padding(4)
             }
             HStack(spacing: 8) {
-                Button("ABC") { c.screen = .typing }
-                    .font(.headline).frame(width: 72, height: 44)
-                Button { c.insertEmoji(" ") } label: {
-                    Text("space").frame(maxWidth: .infinity, minHeight: 44)
-                }
-                .buttonStyle(.bordered)
+                Text("ABC")
+                    .font(.headline)
+                    .frame(width: 72, height: 44)
+                    .tapTarget("Letters") { c.screen = .typing }
+                Text("space")
+                    .frame(maxWidth: .infinity, minHeight: 44)
+                    .background(Color(.tertiarySystemFill), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                    .tapTarget("Space") { c.insertEmoji(" ") }
                 BarButton(title: "Delete", systemImage: "delete.left") { c.repeatBackspace() }
             }
             .padding(.horizontal, 6).padding(.bottom, 4)

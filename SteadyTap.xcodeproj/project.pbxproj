@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		00F417A60DA6E29D8C6F4BB7 /* TouchEngine in Frameworks */ = {isa = PBXBuildFile; productRef = C191DECB5B2630BBAADB7EDC /* TouchEngine */; };
+		03360D780ECC72694053512C /* TapTarget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B015FD316994011BF69CCFD /* TapTarget.swift */; };
 		1FCCD9C98D8D881F8951890A /* KeyboardController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9CABD97401DA6EE0B5EC72F /* KeyboardController.swift */; };
 		4610509F71443153A616B1C6 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3E201CB090356EC678BD4B27 /* Assets.xcassets */; };
 		682BF95E5BA8C7D39074AC8B /* SteadyTapKeyboard.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 5A9E5E911A2C02630548E28A /* SteadyTapKeyboard.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -51,6 +52,7 @@
 		40D3C9B855DBB3C639C599FB /* Explain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Explain.swift; sourceTree = "<group>"; };
 		52D6B8C5A0A77DECFF74BECA /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		5A9E5E911A2C02630548E28A /* SteadyTapKeyboard.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = SteadyTapKeyboard.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		7B015FD316994011BF69CCFD /* TapTarget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapTarget.swift; sourceTree = "<group>"; };
 		7F684AFF0BF52AEE385B2956 /* HowTo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HowTo.swift; sourceTree = "<group>"; };
 		8C64A5321D831CBD7100B568 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		9CD018750D0D95365A863F92 /* TouchSurfaceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchSurfaceView.swift; sourceTree = "<group>"; };
@@ -123,6 +125,7 @@
 				B9CABD97401DA6EE0B5EC72F /* KeyboardController.swift */,
 				FC3804E9315CE116C1197EBD /* KeyboardViewController.swift */,
 				DB16CF729056E7D5D6DE1DFC /* KeyboardViews.swift */,
+				7B015FD316994011BF69CCFD /* TapTarget.swift */,
 				9CD018750D0D95365A863F92 /* TouchSurfaceView.swift */,
 			);
 			path = Keyboard;
@@ -243,6 +246,7 @@
 				1FCCD9C98D8D881F8951890A /* KeyboardController.swift in Sources */,
 				6F38870E54CF202B4120736A /* KeyboardViewController.swift in Sources */,
 				C5191A0FB209E813207D46C3 /* KeyboardViews.swift in Sources */,
+				03360D780ECC72694053512C /* TapTarget.swift in Sources */,
 				DD79D9AAB6361F35B8511355 /* TouchSurfaceView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
