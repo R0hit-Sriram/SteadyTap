@@ -9,7 +9,11 @@ struct KeyboardRootView: View {
             switch c.screen {
             case .typing, .calibrating, .comparing:
                 VStack(spacing: 0) {
-                    ToolbarView(c: c).frame(height: c.toolbarHeight)
+                    ToolbarView(c: c)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .background(GeometryReader { g in Color.clear.preference(key: BarHeightKey.self, value: g.size.height) })
+                        .onPreferenceChange(BarHeightKey.self) { c.measuredBarHeight = $0.rounded(.up) }
+                        .frame(height: c.toolbarHeight)
                     SurfaceView(c: c).frame(height: c.layout.height)
                 }
             case .emoji:
@@ -305,10 +309,6 @@ struct ComparisonBar: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
-            .fixedSize(horizontal: false, vertical: true)
-            .background(GeometryReader { g in Color.clear.preference(key: BarHeightKey.self, value: g.size.height) })
-            .onPreferenceChange(BarHeightKey.self) { h in c.comparisonBarHeight = max(h.rounded(.up), 52) }
-            .frame(maxHeight: .infinity, alignment: .top)
         }
     }
 }

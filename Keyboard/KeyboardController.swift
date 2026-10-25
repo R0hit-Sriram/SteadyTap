@@ -97,10 +97,11 @@ final class KeyboardController: ObservableObject {
         }
     }
     @Published private(set) var profile: CalibrationProfile?
-    @Published var screen: Screen = .typing { didSet { reportHeight() } }
-    /// Measured height of the comparison bar. A long phrase wraps, and the keys must move down rather than sit under it.
-    @Published var comparisonBarHeight: Double = 124 {
-        didSet { if abs(comparisonBarHeight - oldValue) > 0.5 { reportHeight() } }
+    @Published var screen: Screen = .typing { didSet { measuredBarHeight = 0; reportHeight() } }
+    /// Measured height of the bar above the keys. Wrapped text or big Dynamic Type grows the bar,
+    /// and the keys must move down rather than sit under it.
+    @Published var measuredBarHeight: Double = 0 {
+        didSet { if abs(measuredBarHeight - oldValue) > 0.5 { reportHeight() } }
     }
     @Published private(set) var width: Double = 375
     @Published private(set) var showGlobe = true
@@ -147,9 +148,11 @@ final class KeyboardController: ObservableObject {
                                    showNextKeyboard: showGlobe)
     }
 
-    var toolbarHeight: Double {
+    var toolbarHeight: Double { max(minimumBarHeight, measuredBarHeight) }
+
+    private var minimumBarHeight: Double {
         switch screen {
-        case .comparing: return comparisonBarHeight
+        case .comparing: return 124
         case .typing: return settings.showTouches ? 84 : 52
         default: return 52
         }
