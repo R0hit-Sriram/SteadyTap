@@ -102,8 +102,8 @@ struct HomeView: View {
                 switch route {
                 case .setup: SetupView()
                 case .practice: PracticeView()
-                case .howItWorks: ArticleView(route: route, sections: Copy.howItWorks)
-                case .comparison: ArticleView(route: route, sections: Copy.comparison)
+                case .howItWorks: ArticleView(route: route, sections: Copy.howItWorks, steps: Explain.howItWorks)
+                case .comparison: ArticleView(route: route, sections: Copy.comparison, steps: Explain.compare)
                 case .privacy: ArticleView(route: route, sections: Copy.privacy)
                 }
             }
@@ -449,10 +449,20 @@ struct PracticeView: View {
 struct ArticleView: View {
     let route: Route
     let sections: [(heading: String, body: [LocalizedStringKey])]
+    /// Shown above the text, for pages where a picture explains it faster than a paragraph.
+    var steps: [ExplainStep] = []
 
     var body: some View {
         List {
             Section { PageHeader(route: route) }
+            if !steps.isEmpty {
+                Section {
+                    ExplainView(steps: steps)
+                        .frame(maxWidth: .infinity)
+                        .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
+                        .listRowBackground(Color.clear)
+                }
+            }
             ForEach(sections.indices, id: \.self) { i in
                 Section {
                     VStack(alignment: .leading, spacing: 10) {

@@ -16,6 +16,7 @@
 		C5191A0FB209E813207D46C3 /* KeyboardViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB16CF729056E7D5D6DE1DFC /* KeyboardViews.swift */; };
 		DB8ECC02C1EDE569235DE2B3 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52D6B8C5A0A77DECFF74BECA /* Theme.swift */; };
 		DD79D9AAB6361F35B8511355 /* TouchSurfaceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CD018750D0D95365A863F92 /* TouchSurfaceView.swift */; };
+		E2548AAAD0F879C259C37470 /* Explain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40D3C9B855DBB3C639C599FB /* Explain.swift */; };
 		EC8291C96CFE08AA38CDD6C8 /* TouchMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD1D5B39028AA04DC09A4CBD /* TouchMap.swift */; };
 		FA1F4A1B33A250550BAD2106 /* SteadyTapApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B610C81BCED90B9B7BE71C0E /* SteadyTapApp.swift */; };
 /* End PBXBuildFile section */
@@ -47,6 +48,7 @@
 /* Begin PBXFileReference section */
 		1FA1337AE8E5268376EDF3A9 /* TouchEngine */ = {isa = PBXFileReference; lastKnownFileType = folder; name = TouchEngine; path = Packages/TouchEngine; sourceTree = SOURCE_ROOT; };
 		3E201CB090356EC678BD4B27 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		40D3C9B855DBB3C639C599FB /* Explain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Explain.swift; sourceTree = "<group>"; };
 		52D6B8C5A0A77DECFF74BECA /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		5A9E5E911A2C02630548E28A /* SteadyTapKeyboard.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = SteadyTapKeyboard.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		7F684AFF0BF52AEE385B2956 /* HowTo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HowTo.swift; sourceTree = "<group>"; };
@@ -94,6 +96,7 @@
 			isa = PBXGroup;
 			children = (
 				3E201CB090356EC678BD4B27 /* Assets.xcassets */,
+				40D3C9B855DBB3C639C599FB /* Explain.swift */,
 				7F684AFF0BF52AEE385B2956 /* HowTo.swift */,
 				AE99C511F8DAEF5A50BEBBEA /* Info.plist */,
 				B610C81BCED90B9B7BE71C0E /* SteadyTapApp.swift */,
@@ -225,6 +228,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E2548AAAD0F879C259C37470 /* Explain.swift in Sources */,
 				939301250CE1D4E7AA351205 /* HowTo.swift in Sources */,
 				FA1F4A1B33A250550BAD2106 /* SteadyTapApp.swift in Sources */,
 				DB8ECC02C1EDE569235DE2B3 /* Theme.swift in Sources */,

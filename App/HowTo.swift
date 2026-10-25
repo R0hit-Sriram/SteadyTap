@@ -163,22 +163,36 @@ enum HowTo {
 
 struct HowToView: View {
     let steps: [HowToStep]
+
+    var body: some View {
+        StepPlayer(captions: steps.map(\.caption)) { i in
+            PhoneScreen(screen: steps[i].screen)
+        }
+    }
+}
+
+/// Plays a set of captioned pictures: runs by itself, can be paused, and can be stepped by hand.
+/// Shared by the setup walkthroughs and the explanations, so they behave identically.
+struct StepPlayer<Content: View>: View {
+    let captions: [String]
+    @ViewBuilder let content: (Int) -> Content
+
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var index = 0
     @State private var playing = true
-    private let tick = Timer.publish(every: 3.0, on: .main, in: .common).autoconnect()
+    private let tick = Timer.publish(every: 3.4, on: .main, in: .common).autoconnect()
 
     var body: some View {
         VStack(spacing: 14) {
-            PhoneScreen(screen: steps[index].screen)
+            content(index)
                 .id(index)
                 .transition(.asymmetric(insertion: .move(edge: .trailing).combined(with: .opacity),
                                         removal: .move(edge: .leading).combined(with: .opacity)))
                 .clipped()
                 .accessibilityElement()
-                .accessibilityLabel("Step \(index + 1) of \(steps.count). \(steps[index].caption)")
+                .accessibilityLabel("Step \(index + 1) of \(captions.count). \(captions[index])")
 
-            Text(steps[index].caption)
+            Text(captions[index])
                 .font(.title3.weight(.semibold))
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity, minHeight: 56, alignment: .top)
@@ -225,7 +239,7 @@ struct HowToView: View {
 
     private var dots: some View {
         HStack(spacing: 5) {
-            ForEach(steps.indices, id: \.self) { i in
+            ForEach(captions.indices, id: \.self) { i in
                 Circle()
                     .fill(i == index ? Palette.accent : Color(.tertiaryLabel))
                     .frame(width: 6, height: 6)
@@ -235,7 +249,7 @@ struct HowToView: View {
     }
 
     private func advance(_ by: Int) {
-        let next = (index + by + steps.count) % steps.count
+        let next = (index + by + captions.count) % captions.count
         if reduceMotion { index = next } else { withAnimation(.easeInOut(duration: 0.35)) { index = next } }
     }
 }
