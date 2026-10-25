@@ -30,7 +30,7 @@ struct KeyboardRootView: View {
                 ComparisonDoneView(c: c)
             }
         }
-        .frame(height: c.totalHeight)
+        .frame(height: c.totalHeight, alignment: .top) // if iOS gives less room for a moment, keep the bar visible
     }
 }
 

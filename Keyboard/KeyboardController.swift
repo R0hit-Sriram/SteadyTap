@@ -97,12 +97,15 @@ final class KeyboardController: ObservableObject {
         }
     }
     @Published private(set) var profile: CalibrationProfile?
-    @Published var screen: Screen = .typing { didSet { measuredBarHeight = 0; reportHeight() } }
+    @Published var screen: Screen = .typing { didSet { measuredBarHeight = 0; heightCap = nil; reportHeight() } }
     /// Measured height of the bar above the keys. Wrapped text or big Dynamic Type grows the bar,
     /// and the keys must move down rather than sit under it.
     @Published var measuredBarHeight: Double = 0 {
         didSet { if abs(measuredBarHeight - oldValue) > 0.5 { reportHeight() } }
     }
+    /// The most height iOS will give the keyboard, once it has given us less than we asked for.
+    /// The key rows shrink to fit it, so nothing (Done, the space bar) is cut off.
+    @Published private(set) var heightCap: Double?
     @Published private(set) var width: Double = 375
     @Published private(set) var showGlobe = true
     @Published private(set) var flashKeyID: String?
@@ -144,15 +147,15 @@ final class KeyboardController: ObservableObject {
             multiplier = settings.keySize.rowHeightMultiplier
         }
         let page = screen == .calibrating ? .letters : activeSession.page
-        return KeyboardLayout.make(page: page, width: width, rowHeight: Self.baseRowHeight * multiplier,
-                                   showNextKeyboard: showGlobe)
+        var rowHeight = Self.baseRowHeight * multiplier
+        if let heightCap { rowHeight = min(rowHeight, max(36, (heightCap - toolbarHeight) / 4)) }
+        return KeyboardLayout.make(page: page, width: width, rowHeight: rowHeight, showNextKeyboard: showGlobe)
     }
 
     var toolbarHeight: Double { max(minimumBarHeight, measuredBarHeight) }
 
     private var minimumBarHeight: Double {
         switch screen {
-        case .comparing: return 124
         case .typing: return settings.showTouches ? 84 : 52
         default: return 52
         }
@@ -168,6 +171,14 @@ final class KeyboardController: ObservableObject {
     }
 
     private func reportHeight() { onHeightChange?(totalHeight) }
+
+    /// The height iOS actually laid the keyboard out at. Less than we asked for means iOS won't go taller.
+    /// (Below the normal typing height it's a passing layout, not a limit, so it's ignored.)
+    func viewHeightChanged(_ height: Double) {
+        guard height >= 260, height + 1 < totalHeight else { return }
+        heightCap = height
+        reportHeight()
+    }
 
     // MARK: Typing
 
@@ -339,7 +350,8 @@ final class KeyboardController: ObservableObject {
             settings.comparisonRuns += 1
             screen = .comparisonDone
         }
-        reportHeight() // "larger keys" trials are taller
+        heightCap = nil // "larger keys" trials are taller: ask for the full height again
+        reportHeight()
         revision += 1
     }
 

@@ -33,6 +33,11 @@ final class KeyboardViewController: UIInputViewController {
         controller.update(width: view.bounds.width, showGlobe: needsInputModeSwitchKey)
     }
 
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        controller.viewHeightChanged(view.bounds.height)
+    }
+
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         syncWithHost()
