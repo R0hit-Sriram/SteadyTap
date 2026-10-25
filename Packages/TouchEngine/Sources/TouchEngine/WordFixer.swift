@@ -16,7 +16,8 @@ public struct WordList: Sendable {
     /// `text`: one "word count" per line; lines starting with # are ignored.
     public init(text: String) {
         var counts: [(String, Double)] = []
-        for line in text.split(separator: "\n") where !line.hasPrefix("#") {
+        // isNewline: a Windows checkout has "\r\n", which Swift counts as one character, not "\n".
+        for line in text.split(whereSeparator: { $0.isNewline }) where !line.hasPrefix("#") {
             let parts = line.split(separator: " ")
             guard parts.count == 2, let n = Double(parts[1]), n > 0 else { continue }
             counts.append((String(parts[0]), n))
