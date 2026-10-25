@@ -15,7 +15,10 @@ BLOCKED_PREFIXES = ("fuck", "shit", "bitch", "cunt", "nigg", "fag", "retard", "w
                     "dumbass", "bullshit", "goddamn", "tits", "porn", "spastic", "cripple")
 BLOCKED_PREFIXES += ('negro', 'dyke', 'skank', 'rape', 'rapist', 'nazi', 'hitler', 'midget', 'tranny', 'nigger', 'jizz', 'dildo', 'orgasm', 'sperm', 'semen', 'penis', 'vagina', 'boner', 'horny', 'milf', 'hooker', 'porno', 'molest', 'pedophil', 'incest', 'kike', 'chink', 'wetback', 'gook', 'beaner', 'raghead', 'towelhead', 'mongoloid', 'imbecile', 'cretin', 'stripper', 'prostitut', 'erotic', 'kinky', 'fetish', 'bondage')
 BLOCKED_EXTRA = ['anal', 'bimbo', 'coon', 'coons', 'cum', 'darkie', 'dumb', 'dumbest', 'escort', 'escorts', 'gay', 'gays', 'hoe', 'hoes', 'homo', 'homos', 'homosexual', 'idiot', 'idiotic', 'idiots', 'jap', 'japs', 'lame', 'lesbian', 'lesbians', 'lunatic', 'lunatics', 'moron', 'morons', 'naked', 'nude', 'nudes', 'paki', 'pakis', 'pimp', 'pimps', 'psycho', 'psychopath', 'psychos', 'psychotic', 'queer', 'queers', 'retard', 'retards', 'sex', 'sexist', 'sexual', 'sexuality', 'sexually', 'sexy', 'spic', 'spics', 'stupid', 'stupidest', 'thot']
-BLOCKED = set(BLOCKED_EXTRA) | {"ass", "damn", "crap", "prick", "spaz", "tit", "boob", "boobs", "hell"}
+# Misspellings common in the subtitle counts, so they'd never be fixed (checked against Wikipedia's
+# "Lists of common misspellings/For machines"). Contractions typed without the apostrophe (didnt) stay.
+MISSPELLINGS = ['dum', 'ther', 'everytime', 'alot', 'noone', 'overthere', 'upto', 'happend', 'holliday', 'fleed', 'loosing', 'sherif', 'untill', 'gae', 'beggin', 'belive', 'realy', 'commited', 'occured', 'appartment', 'accidently', 'comming', 'wich', 'embarassing', 'ect', 'noth', 'carefull', 'vermillion', 'adress']
+BLOCKED = set(BLOCKED_EXTRA) | set(MISSPELLINGS) | {"ass", "damn", "crap", "prick", "spaz", "tit", "boob", "boobs", "hell"}
 
 words = []
 for line in open(sys.argv[1], encoding="utf-8"):

@@ -66,7 +66,10 @@ public enum WordFixer {
     /// Chance that a tap landed exactly where the person aimed, but they aimed at the wrong letter (a spelling
     /// slip, not a touch error). Without it, a careful typist's typos could never be fixed, because their
     /// touch model is so sure of every key.
-    public static let slip = 0.01
+    public static let slip = 0.03
+    /// How much less likely an unlisted word is than the rarest listed one (log, e^-7 ≈ 1/1100). Most unlisted
+    /// words a person types are misspellings; names still stay when no listed word is close.
+    public static let unknownPenalty = -7.0
     public static let maxLength = 15
 
     /// How likely each kind of slip is, per word (log probabilities). Rare on purpose: a slip has to be
@@ -97,8 +100,9 @@ public enum WordFixer {
     }
 
     /// Evidence for a letter the person picked themselves in the choice bar: that letter, for sure.
+    /// Every other letter is impossible, so no fix or suggestion can change it.
     public static func certain(_ letter: Character) -> [Double] {
-        var e = Array(repeating: log(letterFloor), count: 26)
+        var e = Array(repeating: -Double.infinity, count: 26)
         let i = LetterContext.index(of: letter)
         if i < 26 { e[i] = 0 }
         return e
@@ -166,7 +170,7 @@ public enum WordFixer {
 
         let taps = Taps(evidence)
         // The typed letters as they are: a strong starting point, so most other words stop early.
-        let typedScore = fit(typed.map(LetterContext.index(of:)), taps) + (words.logPriors[typed] ?? words.unknownLogPrior)
+        let typedScore = fit(typed.map(LetterContext.index(of:)), taps) + (words.logPriors[typed] ?? words.unknownLogPrior + unknownPenalty)
         var scores = [(word: typed, score: typedScore)]
         var best = typedScore
         for e in entries where e.word != typed {

@@ -234,6 +234,36 @@ final class WordFixTests: XCTestCase {
         XCTAssertEqual(buffer.text, "hi ")
     }
 
+    func testCommonSpellingMistakesAreFixed() {
+        // Typed with clean taps: these are spelling slips, not touch errors. A careful (σ 3) person's model.
+        let typos = [("becuase", "because"), ("freind", "friend"), ("recieve", "receive"), ("tommorow", "tomorrow"),
+                     ("wierd", "weird"), ("beleive", "believe"), ("untill", "until"), ("togehter", "together"),
+                     ("seperate", "separate"), ("thier", "their"), ("goverment", "government"),
+                     ("taht", "that"), ("waht", "what"), ("thnak", "thank"), ("pleae", "please"), ("comming", "coming"),
+                     ("begining", "beginning"), ("sentance", "sentence"), ("libary", "library"), ("suprise", "surprise"),
+                     ("hapy", "happy"), ("mornign", "morning"), ("todya", "today"),
+                     ("yesturday", "yesterday"), ("hwllo", "hello"), ("dinmer", "dinner"), ("grwat", "great"),
+                     ("peopel", "people"), ("woudl", "would"), ("somthing", "something"), ("intresting", "interesting")]
+        var user = SyntheticUser(sigma: 3)
+        let model = ModelFitter.fit(user.calibrate(CalibrationSession.standardSets(layout: layout390).flatMap { $0 },
+                                                   layout: layout390), layout: layout390)
+        var missed: [String] = []
+        for (typed, want) in typos {
+            let (session, buffer) = wordSession()
+            session.model = model
+            type(typed + " ", session)
+            if buffer.text != want + " " { missed.append(typed + " → " + buffer.text) }
+        }
+        print("Spelling mistakes fixed: \(typos.count - missed.count) of \(typos.count). Missed: \(missed)")
+        XCTAssertGreaterThanOrEqual(typos.count - missed.count, typos.count * 9 / 10, "\(missed)")
+        for keep in ["rohit", "priya", "grandma", "frisco", "wakeland", "lol", "ok", "diner", "quiet", "then", "were", "loose"] {
+            let (session, buffer) = wordSession()
+            session.model = model
+            type(keep + " ", session)
+            XCTAssertEqual(buffer.text, keep + " ", "a real word or name must stay")
+        }
+    }
+
     func testOldSettingsTurnWordFixingOn() throws {
         let s = try JSONDecoder().decode(KeyboardSettings.self, from: Data(#"{"adaptationOn":true}"#.utf8))
         XCTAssertTrue(s.fixWords)

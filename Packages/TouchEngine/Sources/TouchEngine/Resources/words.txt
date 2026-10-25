@@ -11465,7 +11465,6 @@ expressing 1922
 clacking 1922
 doggie 1922
 airlines 1921
-dum 1921
 unicorn 1921
 jackets 1921
 goofy 1921
@@ -14276,7 +14275,6 @@ joaquin 1356
 myrtle 1356
 europeans 1356
 deputies 1355
-ther 1355
 highlights 1355
 musashi 1355
 cate 1355
@@ -16413,7 +16411,6 @@ indestructible 1077
 electrocuted 1077
 silverware 1077
 disorders 1077
-everytime 1077
 terence 1077
 albany 1077
 armory 1077
@@ -19112,7 +19109,6 @@ americas 831
 scavenger 831
 middleman 831
 garde 831
-alot 831
 crusader 831
 mcduck 830
 baa 830
@@ -21153,7 +21149,6 @@ subjective 695
 cicero 695
 converting 695
 transformer 695
-noone 695
 inventive 695
 eloquent 695
 soot 695
@@ -24474,7 +24469,6 @@ capped 539
 knowwhat 539
 ponds 539
 sided 539
-overthere 539
 landmarks 539
 converts 539
 outback 539
@@ -24860,7 +24854,6 @@ raider 525
 jangling 525
 hipster 525
 reels 525
-upto 525
 triangles 525
 individuality 525
 debauchery 525
@@ -25051,7 +25044,6 @@ enthusiast 518
 chronicles 518
 scorpius 518
 interactive 518
-happend 518
 kooky 518
 shih 518
 devouring 518
@@ -25448,7 +25440,6 @@ myles 502
 dips 502
 dimple 502
 bannerman 502
-holliday 502
 ascended 502
 tidied 502
 shrouded 502
@@ -25818,7 +25809,6 @@ diff 490
 basing 490
 cadence 490
 davide 490
-fleed 490
 ulrik 490
 wesson 490
 ied 490
@@ -26041,7 +26031,6 @@ unresponsive 483
 inhumane 483
 teleportation 483
 geographical 483
-loosing 483
 schoolyard 483
 gaff 483
 philips 482
@@ -28906,7 +28895,6 @@ barnum 398
 amiga 398
 hubba 398
 antsy 398
-sherif 398
 rednecks 398
 hagan 398
 seventies 398
@@ -29329,7 +29317,6 @@ panics 388
 brainwash 388
 perplexed 388
 hustled 388
-untill 388
 muldoon 388
 anni 388
 dinesh 387
@@ -29930,7 +29917,6 @@ matchbox 374
 probate 374
 zipped 374
 dissected 374
-gae 374
 mammoths 374
 magnify 374
 marlboro 373
@@ -30361,7 +30347,6 @@ saxons 364
 cantina 364
 kindling 364
 rothstein 364
-beggin 364
 toulon 363
 undocumented 363
 barges 363
@@ -32315,7 +32300,6 @@ knockoff 323
 burnside 323
 inauspicious 323
 sarang 323
-belive 323
 brentwood 323
 wudang 323
 attache 323
@@ -32683,7 +32667,6 @@ appetizing 316
 mccallister 316
 baum 316
 odell 316
-realy 316
 zoltan 316
 circe 316
 contraire 316
@@ -32735,7 +32718,6 @@ preyed 315
 shalu 315
 chiquita 315
 shia 315
-commited 315
 whinny 315
 spousal 315
 lettering 315
@@ -34753,7 +34735,6 @@ densha 281
 omni 281
 tansy 281
 sine 281
-occured 281
 appropriations 281
 symbolically 281
 embarking 281
@@ -35101,7 +35082,6 @@ fantastical 276
 unmatched 276
 trousseau 276
 nehru 276
-appartment 276
 elba 276
 showmanship 276
 mcdowell 276
@@ -35277,7 +35257,6 @@ telecommunications 273
 domes 273
 doogie 273
 bewitching 273
-accidently 273
 protruding 273
 grapple 273
 farragut 273
@@ -35584,7 +35563,6 @@ olympian 269
 arafat 269
 unsteady 269
 kwong 269
-comming 269
 solovyov 269
 flicka 268
 astrological 268
@@ -35882,7 +35860,6 @@ itv 265
 enchant 265
 balan 265
 squires 265
-wich 265
 twinge 265
 mishka 265
 yossi 265
@@ -36364,7 +36341,6 @@ snub 258
 intracranial 258
 softener 258
 prophesied 258
-embarassing 258
 misinformation 258
 benefactors 258
 reapers 258
@@ -36842,7 +36818,6 @@ deidre 251
 tarnation 251
 illustrates 251
 prez 251
-ect 251
 unfettered 251
 batsman 251
 twerk 251
@@ -37269,7 +37244,6 @@ dabney 245
 wunderbar 245
 daimyo 245
 vitally 245
-noth 245
 cravat 245
 bullfighting 245
 grout 245
@@ -38508,7 +38482,6 @@ migratory 230
 allocation 230
 alternator 230
 cessna 230
-carefull 230
 barbers 230
 ivs 230
 buda 230
@@ -38773,7 +38746,6 @@ equatorial 227
 scullery 227
 valerian 227
 borman 227
-vermillion 227
 ler 227
 navidad 227
 baggie 227
@@ -39880,7 +39852,6 @@ xiangyang 215
 failsafe 215
 gaviria 215
 wiggles 215
-adress 215
 anglia 215
 authentication 215
 unspoiled 215
