@@ -305,8 +305,17 @@ struct ComparisonBar: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
+            .fixedSize(horizontal: false, vertical: true)
+            .background(GeometryReader { g in Color.clear.preference(key: BarHeightKey.self, value: g.size.height) })
+            .onPreferenceChange(BarHeightKey.self) { h in c.comparisonBarHeight = max(h.rounded(.up), 52) }
+            .frame(maxHeight: .infinity, alignment: .top)
         }
     }
+}
+
+struct BarHeightKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = max(value, nextValue()) }
 }
 
 // MARK: - Panels

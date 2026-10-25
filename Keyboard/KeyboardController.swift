@@ -98,6 +98,10 @@ final class KeyboardController: ObservableObject {
     }
     @Published private(set) var profile: CalibrationProfile?
     @Published var screen: Screen = .typing { didSet { reportHeight() } }
+    /// Measured height of the comparison bar. A long phrase wraps, and the keys must move down rather than sit under it.
+    @Published var comparisonBarHeight: Double = 124 {
+        didSet { if abs(comparisonBarHeight - oldValue) > 0.5 { reportHeight() } }
+    }
     @Published private(set) var width: Double = 375
     @Published private(set) var showGlobe = true
     @Published private(set) var flashKeyID: String?
@@ -145,7 +149,7 @@ final class KeyboardController: ObservableObject {
 
     var toolbarHeight: Double {
         switch screen {
-        case .comparing: return 124
+        case .comparing: return comparisonBarHeight
         case .typing: return settings.showTouches ? 84 : 52
         default: return 52
         }
