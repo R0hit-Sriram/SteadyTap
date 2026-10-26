@@ -4,6 +4,8 @@ An iPhone keyboard for older adults and anyone whose taps often land on the key 
 
 It is an accessibility tool, not a medical device. It does not diagnose, treat or claim to help any specific condition.
 
+Made by Rohit Sriram (Wakeland High School) and Prajin Kannan Babu Sangitha (Emerson High School), Frisco ISD, Texas, for the 2026 Congressional App Challenge.
+
 ## Repository layout
 
 ```
@@ -14,7 +16,7 @@ Keyboard/                   keyboard extension (UIInputViewController)
   KeyboardController        screen state, calibration/comparison flow, settings, storage
   TouchSurfaceView          single view that captures every touch path and draws keys + demo overlay
   KeyboardViews             SwiftUI toolbar, choice bar, settings and result panels
-Packages/TouchEngine/       THE ALGORITHM — pure Swift, no UIKit, unit-tested
+Packages/TouchEngine/       the algorithm: pure Swift, no UIKit, unit-tested
   Layout, Gesture           key geometry; touch-down/up/path/dwell points
   ModelFitter, TouchModel   learn offsets + spread from calibration (with shrinkage, leave-one-out)
   Decoder                   score keys, decide, flag uncertain taps
@@ -72,7 +74,7 @@ change the code, the engine, and `project.yml`; the engine's tests run anywhere 
    - plus a shift per key with borrowing (the model actually used)
    - for contrast: per key with no borrowing, and the same model on the lift-off point
 
-   Every number is leave-one-out accuracy on that person's own calibration taps. Layers don't always help: for a very regular person "no borrowing" can score slightly higher. The table shows that honestly rather than hiding it.
+   Every number is leave-one-out accuracy on that person's own calibration taps. Layers don't always help: for a very regular person "no borrowing" can score slightly higher, and the table shows that too.
 10. **Keeps adapting while you type (online learning, `OnlineLearner.swift`, on by default, can be switched off).** Everyday typing doesn't tell us the intended key, so the keyboard keeps the last 3 typed letters in memory only and waits to see what happens to them. Each becomes one of three labeled examples, trusted differently:
 
     | Label | When | Weight | Updates |
@@ -96,7 +98,7 @@ change the code, the engine, and `project.yml`; the engine's tests run anywhere 
     score(word) = log P(taps | word) + log P(word)
 
     - **P(letter | tap)** comes from this person's touch model (touch evidence only; the letter-pair hint is left out so it isn't counted twice). Each letter also keeps a 3% "spelling slip" chance, shared across the alphabet, so even a tap right on a key can be a typo (otherwise a careful typist's typos could never be fixed).
-    - **P(word)** comes from the 40,000 most common English words (`Resources/words.txt`, built by `tools/make_wordlist.py`; profanity, slurs and sexual words filtered out).
+    - **P(word)** comes from about 40,000 of the most common English words (`Resources/words.txt`, built by `tools/make_wordlist.py`; profanity, slurs and sexual words filtered out).
     - **P(taps | word)** lines the taps up with the word's letters (dynamic programming, like a spell checker). Usually each tap means one letter, but a tap can also be **extra** (a repeated tap on the same letter, a tremor "bounce", is the likeliest kind), a letter can be **missed**, or two letters can be **swapped**. Each of these costs a fixed penalty, so the plain reading wins unless another word is much better.
     - Every listed word with one letter more, the same number, or one fewer competes with what was typed (an unlisted typed word gets the rarest word's prior times e⁻⁷, because most unlisted words people type are misspellings; names stay when no listed word is close). A letter picked in the two-choice bar can't be changed. The scores become probabilities with softmax. The word changes only if the best one is ≥ 80% likely.
     - **Checking its own confidence.** After calibration we test how sure the touch model says it is against how often it was actually right on this person's taps (each tap scored by a model that never saw it). If it was too sure, its letter probabilities are turned down for word fixing (`ModelFitter.confidenceScale`, never turned up), so "80% sure" means closer to 80% for this person.
@@ -113,13 +115,25 @@ change the code, the engine, and `project.yml`; the engine's tests run anywhere 
 
 The toolbar shows the top-three probabilities and two lines: what a fixed keyboard would have typed versus what was typed.
 
+## Testing with real people
+
+Three of our grandparents in India tried SteadyTap. Each one typed the same phrases on the normal iPhone keyboard and then on SteadyTap after calibrating, with an adult family member helping, and we screen-recorded both. We counted the results from the recordings, so the numbers are approximate.
+
+| Tester | Letters correct (normal → SteadyTap) | Other notes |
+|---|---|---|
+| Rohit's grandma | 71% → 83% | Typing speed went from about 8 to 10 words per minute |
+| Prajin's grandma | 85% → 92% | Backspaces went from 17 to 9 |
+| Prajin's grandpa | 95% → 95% | Already accurate. He said calibration felt too long |
+
+Both grandmas liked it because they could send cleaner messages to family. The grandpa's feedback is the main thing we'd change next: a shorter calibration for people whose first test is already accurate. Three people is a small test, none of them were tested for a specific condition, and this is not a medical study.
+
 ## Credits
 
 - Word list: [FrequencyWords](https://github.com/hermitdave/FrequencyWords) by Hermit Dave (OpenSubtitles 2018 counts), CC BY-SA 4.0. Our filtered `words.txt` is shared under the same license.
 
 ## AI use (disclosed, as the Congressional App Challenge rules require)
 
-We used an AI coding assistant (Claude) to help write and review code, tests and documentation. The app itself uses no AI service: everything runs on the phone, with our own explainable algorithm. Every team member should be able to explain how each part works.
+We used an AI coding assistant (Claude) to help write and review code, tests and documentation. The app itself uses no AI: everything runs on the phone with our own algorithm, and we can explain how each part works.
 
 ## Privacy
 
@@ -142,7 +156,7 @@ We used an AI coding assistant (Claude) to help write and review code, tests and
 | Touch engine + 79 unit tests (calibration, scoring, sparse data, ambiguity, repeated letters, undo/choice, per-layer evaluation, online learning under drift and no drift, labeling rules, change detection, whole-word fixing, comparison statistics, storage, delete, no typed text on disk) | **Implemented and passing** (`swift test`, Swift 5.10) |
 | Keyboard extension and containing app | **Built in Xcode and running on an iPhone** (team-tested). |
 | Device behavior (enabling, typing in other apps, switching, persistence, secure fields) | **Checked by the team on one iPhone.** The full list is in docs/MAC_AND_IPHONE.md. |
-| Testing with real users | **Team testing so far** (including typing with the non-dominant hand to simulate off-target taps). Sessions with older adults are starting. We have not tested with people who have specific motor conditions, and we make no claims about them. |
+| Testing with real users | **3 older adults** (our grandparents, see above), plus team testing. We have not tested with people who have specific motor conditions, and we make no claims about them. |
 
 ## Known limitations
 
@@ -153,7 +167,8 @@ We used an AI coding assistant (Claude) to help write and review code, tests and
 - The keys are drawn on screen and are **not exposed to VoiceOver** individually.
 - Some apps and fields block third-party keyboards.
 - Landscape works, but the model was learned in the orientation used for calibration.
-- We have **not** shown that it helps people with any particular condition. The comparison measures one person on one phone.
+- We have **not** shown that it helps people with any particular condition. Our real-user test was 3 people, and the built-in comparison measures one person on one phone.
+- Calibration (63 taps) can feel long for someone who already types accurately.
 
 ## Prior art
 

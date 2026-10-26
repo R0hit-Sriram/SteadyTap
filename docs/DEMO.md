@@ -15,7 +15,7 @@ Film the real iPhone screen with a screen recording, plus a hand camera for the 
 
 ## Honesty rules for the video
 
-- If no affected user has tested it, say so on screen: "Tested so far by our team only."
+- Real-user results come from our 3 grandparent testers (see the README). Label them as approximate and as a small test, not a study.
 - Label teammate demonstrations as a demonstration of the software, not evidence that it helps any condition.
 - Use the real comparison numbers, whatever they are. A result where "larger keys" won is still a finding.
 - Don't call it AI. It's "a personalized statistical model of your touches" and we can explain every step.

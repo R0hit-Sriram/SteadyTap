@@ -16,3 +16,6 @@ DerivedData/
 .swarm/
 ruvector.db
 build/
+.agents/
+.claude/skills/
+skills-lock.json
