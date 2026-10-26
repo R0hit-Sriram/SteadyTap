@@ -133,7 +133,7 @@ Both grandmas liked it because they could send cleaner messages to family. The g
 
 ## AI use (disclosed, as the Congressional App Challenge rules require)
 
-We used an AI coding assistant (Claude) to help write and review code, tests and documentation. The app itself uses no AI: everything runs on the phone with our own algorithm, and we can explain how each part works.
+We used Claude (Anthropic), through Claude Code. It helped us write and debug code (mostly UI bugs we couldn't track down), wrote and ran the unit tests and the simulated-typist tests described above, helped write this README, and helped edit our demo video. Our grandparents' results come from their own screen recordings, not from the simulations. The app itself uses no AI: everything runs on the phone with our own algorithm, and we can explain how each part works.
 
 ## Privacy
 
