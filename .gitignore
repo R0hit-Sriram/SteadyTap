@@ -11,11 +11,7 @@ DerivedData/
 
 .DS_Store
 
-# Local AI tool state
-.claude-flow/
-.swarm/
-ruvector.db
+# Local editor and tool folders (hidden folders), local databases, build output
+.*/
+*.db
 build/
-.agents/
-.claude/skills/
-skills-lock.json
